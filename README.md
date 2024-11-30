@@ -1,5 +1,5 @@
 # Tracker
-Second version of a [project tracker](https://github.com/itsVinM/Python-Project-Tracker-v0) that was written previously with a different framework, now it is easier to set up locally, ideal for internal tracking and reporting.
+Second version of a [project tracker](https://github.com/itsVinM/Python-Project-Tracker-v0) that was written previously with a different framework, now it is easier to set up locally, ideal for internal tracking and reporting. [Note: it is the base of some trackers that I have been providing to some companies 😄]
 
 
 #### Tools:
