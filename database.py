@@ -14,7 +14,7 @@ def database():
     CREATE TABLE IF NOT EXISTS ProjectTracker (
         Request TEXT PRIMARY KEY,
         Reference INTEGER,
-        Step TEXT,
+        Homologated BOOLEAN,
         Datasheet BOOLEAN,
         Function BOOLEAN,
         EMC BOOLEAN,
@@ -41,13 +41,13 @@ def get_data_from_db(query):
     conn.close()
     return df
 
-def update_data(request_id, reference, step, datasheet, function, emc, note, current, used, position, day, new):
+def update_data(request_id, reference, homologated, datasheet, function, emc, note, current, used, position, day, new):
     conn = sqlite3.connect('project_tracker.db')
     cursor = conn.cursor()
     cursor.execute('''
     UPDATE ProjectTracker
-    SET Reference = ?, Step = ?, Datasheet = ?, Function = ?, EMC = ?, Note = ?, Current = ?, Used = ?, Position = ?, Day = ?
+    SET Reference = ?, Homologated = ?, Datasheet = ?, Function = ?, EMC = ?, Note = ?, Current = ?, Used = ?, Position = ?, Day = ?
     WHERE Request = ?
-    ''', (reference, step, current, used, position, day, new, datasheet, function, emc, note, request_id))
+    ''', (reference, homologated, current, used, position, day, new, datasheet, function, emc, note, request_id))
     conn.commit()
     conn.close()
