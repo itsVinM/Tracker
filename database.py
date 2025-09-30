@@ -14,7 +14,7 @@ def database():
     CREATE TABLE IF NOT EXISTS ProjectTracker (
         Request TEXT PRIMARY KEY,
         Reference INTEGER,
-        Homologated BOOLEAN,
+        Homologated TEXT,
         Datasheet BOOLEAN,
         Function BOOLEAN,
         EMC BOOLEAN,

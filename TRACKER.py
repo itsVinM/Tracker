@@ -71,7 +71,6 @@ def project_tracker():
             "Datasheet": st.column_config.CheckboxColumn(default=None),
             "Function": st.column_config.CheckboxColumn(default=None),
             "EMC": st.column_config.CheckboxColumn(default=None),
-            "Homologated": st.column_config.CheckboxColumn(default=None)
         }
     )
 
