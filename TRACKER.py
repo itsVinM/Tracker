@@ -1,17 +1,15 @@
+import re, shutil, json, sqlite3, plotly, os
+
 import streamlit as st
 import pandas as pd
 from docx import Document
-import os
 from datetime import datetime
-import re, shutil
-import plotly
 import plotly.figure_factory as ff
-import json
-import sqlite3
-import sqlalchemy, sqlite3
 from sqlalchemy import create_engine
 from io import BytesIO
+
 from libraries import *
+from database import *
 
 
 st.set_page_config(
@@ -47,15 +45,14 @@ def project_tracker():
 
         sel1, sel2 = st.columns(2)
         with sel1:
-            selected_day = st.date_input("Filter by 'Day'", value="2025-09-01")
+            selected_day = st.date_input("Filter by 'Day'", value=None, min_value="2025-09-01")
 
         if selected_day:
-            data = data[data['Day'] >= pd.to_datetime(selected_day)]
+            data = data[data['Day'] >= selected_day.date]
 
         edited_data = st.data_editor(
                 data, 
                 num_rows="dynamic", 
-                use_container_width=True,
                 column_config={
                     "Datasheet": st.column_config.CheckboxColumn(),
                     "Function": st.column_config.CheckboxColumn(),
