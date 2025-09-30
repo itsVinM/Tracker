@@ -25,6 +25,8 @@ database()
 
 def project_tracker():
     # --- Layout definition -- 
+    but1 = st.columns(1)
+    
     with st.sidebar:
         st.markdown("""
                     Validation tracker by Vincentiu
@@ -32,7 +34,8 @@ def project_tracker():
 
         uploaded_file = st.file_uploader("Choose an Excel file", type="xlsx")
         sel1, sel2 = st.columns(2)
-    but1, but2, but3, but4 = st.columns(4, gap="small")
+        but2, but3, but4 = st.columns(3, gap="small")
+    
 
     if uploaded_file:
         fill_database(uploaded_file)
