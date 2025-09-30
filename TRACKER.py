@@ -153,28 +153,72 @@ def project_tracker():
     with tab2:
         
     # --- Add new row via form ---
-        st.header("➕ Add New Entry"):
-        with st.form("add_row_form"):
-                new_day = st.date_input("Day")
-                new_dut = st.text_input("DUT SN")
-                new_test = st.text_input("Test Choice")
-                new_step = st.selectbox("Step", ["Ongoing", "Passed", "Failed"])
-                new_datasheet = st.checkbox("Datasheet")
-                new_function = st.checkbox("Function")
-                new_emc = st.checkbox("EMC")
+
+        with st.form(
+            "add_row_form",
+            width="content"):
+                new_request_id = st.text_input("Homologation Request ID")
+
+                text1, text2, text3, text4 = st.columns(4)
+                with text1:
+                    new_reference = st.text_input("Reference")
+                with  text2:
+                    new_step = st.selectbox("Step", ["Ongoing", "Passed", "Failed"])
+                with text3:
+                    new_reason = st.text_input("Reason")
+                with text4:
+                    new_current = st.text_input("Current", value=0.0)
+
+                text5, text6, text7, data1=st.columns(4)
+                with text5:
+                    new_used = st.text_input("Used")
+                with text6:
+                    new_position = st.text_input("Position")
+                with text7:
+                    new_note=st.text_input("Notes")
+                with data1:
+                    new_day = st.date_input("Day", value=datetime.today())
+
+                check1, check2, check3=st.columns(3)
+                with check1:
+                    new_datasheet = st.checkbox("Datasheet")     
+                with check2:
+                    new_function = st.checkbox("Function")
+                with check3:
+                    new_emc = st.checkbox("EMC")
+                
+            
+
                 submitted = st.form_submit_button("Add Row")
 
+
+        
                 if submitted:
                     new_row = {
-                        "Day": pd.to_datetime(new_day),
-                        "DUT SN": new_dut,
-                        "Test Choice": new_test,
-                        "Step": new_step,
-                        "Datasheet": new_datasheet,
-                        "Function": new_function,
-                        "EMC": new_emc
+                        "reference": new_reference,
+                        "step": new_step,
+                        "reason": new_reason,
+                        "current": new_current,
+                        "used": new_used,
+                        "position": new_position,
+                        "day": pd.to_datetime(new_day),
+                        "datasheet": new_datasheet,
+                        "function": new_function,
+                        "emc": new_emc,
+                        "note": new_note,
+                        "request_id": new_request_id
                     }
+
+                    # Ensure all columns exist in the new row
+                    for col in data.columns:
+                        if col not in new_row:
+                            new_row[col] = None
+
+                    # Append the new row to the existing DataFrame
                     data = pd.concat([data, pd.DataFrame([new_row])], ignore_index=True)
-                    st.success("New row added successfully.")
+                    st.success("✅ New row added successfully.")
+
+
+
 
 project_tracker()

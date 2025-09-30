@@ -42,13 +42,13 @@ def get_data_from_db(query):
     conn.close()
     return df
 
-def update_data(request_id, reference, step, reason, current, used, position, day, new, datasheet, function, emc):
+def update_data(request_id, reference, step, reason, current, used, position, day, datasheet, function, emc, note):
     conn = sqlite3.connect('project_tracker.db')
     cursor = conn.cursor()
     cursor.execute('''
     UPDATE ProjectTracker
-    SET Reference = ?, Step = ?, Reason = ?, Current = ?, Used = ?, Position = ?, Day = ?, New = ?, Datasheet = ?, Function = ?, EMC = ?
+    SET Reference = ?, Step = ?, Reason = ?, Current = ?, Used = ?, Position = ?, Day = ?, Datasheet = ?, Function = ?, EMC = ?
     WHERE Request = ?
-    ''', (reference, step, reason, current, used, position, day, new, datasheet, function, emc, request_id))
+    ''', (reference, step, reason, current, used, position, day, datasheet, function, emc, note, request_id))
     conn.commit()
     conn.close()
