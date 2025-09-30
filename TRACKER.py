@@ -37,32 +37,33 @@ def project_tracker():
     data = get_data_from_db(query)
     data['Day'] = pd.to_datetime(data['Day'], errors='coerce')
 
-    tab1, tab2 =st.tabs(["Validation","Database"])
-    with tab1:
-        pass
+    tab1, tab2 =st.tabs(["Database", "Verification"])
+       
 
-    with tab2:
+# ---------- DATABASE WITH ALL INFORMATIONS -----------------
+    with tab1:
 
         sel1, sel2 = st.columns(2)
         with sel1:
-            selected_day = st.date_input("Select Day", valrRue=None, min_value="2025-09-01")
-      
+            selected_day = st.date_input("Filter by 'Day'", value=None, min_value="2025-09-01")
 
         if selected_day:
             data = data[data['Day'] >= pd.to_datetime(selected_day)]
-        
 
+        
+        for col in ["Datasheet", "Function", "EMC"]:
+            if col in data.columns:
+                data[col] = data[col].astype(bool)
 
         edited_data = st.data_editor(
                 data, 
                 num_rows="dynamic", 
                 column_config={
-                    "Datasheet": st.column_config.CheckboxColumn(),
-                    "Function": st.column_config.CheckboxColumn(),
-                    "EMC": st.column_config.CheckboxColumn()
+                    "Datasheet": st.column_config.CheckboxColumn(default=None),
+                    "Function": st.column_config.CheckboxColumn(default=None),
+                    "EMC": st.column_config.CheckboxColumn(default=None)
                 })
 
-    
 
         with but1:
             if st.button("💾 Save Changes"):
