@@ -39,26 +39,38 @@ def project_tracker():
     data = get_data_from_db(query)
     data['Day'] = pd.to_datetime(data['Day'], errors='coerce')
 
-    st.header("DATABASE TABLE")
+    tab1, tab2 =st.tabs(["Validation","Database"])
+    with tab1:
+        pass
 
-    sel1, sel2 = st.columns(2)
-    with sel1:
-        selected_day = st.date_input("Filter by 'Day'", value="2025-09-01")
+    with tab2:
 
-    if selected_day:
+        sel1, sel2 = st.columns(2)
+        with sel1:
+            selected_day = st.date_input("Filter by 'Day'", value="2025-09-01")
+
+        if selected_day:
             data = data[data['Day'] >= pd.to_datetime(selected_day)]
 
-    edited_data = st.data_editor(data, num_rows="dynamic", use_container_width=True)
+        edited_data = st.data_editor(
+                data, 
+                num_rows="dynamic", 
+                use_container_width=True,
+                column_config={
+                    "Datasheet": st.column_config.CheckboxColumn(),
+                    "Function": st.column_config.CheckboxColumn(),
+                    "EMC": st.column_config.CheckboxColumn()
+                })
 
     
 
-    with but1:
+        with but1:
             if st.button("💾 Save Changes"):
                 engine = create_engine('sqlite:///project_tracker.db')
                 edited_data.to_sql('ProjectTracker', con=engine, if_exists='replace', index=False)
                 st.success("Changes saved successfully.")
 
-    with but2:
+        with but2:
             
             backup = BytesIO()
             with pd.ExcelWriter(backup) as writer:
@@ -72,7 +84,7 @@ def project_tracker():
             )
 
           
-    with but3:
+        with but3:
             # Button to generate the report
             if st.button('Generate Report'):
                 # Apply the custom filter based on "REPORTS" status
