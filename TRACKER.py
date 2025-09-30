@@ -27,10 +27,11 @@ def project_tracker():
     # --- Layout definition -- 
     with st.sidebar:
         st.markdown("""
-                    Project tracker developed for Validation by Vincentiu
+                    Validation tracker by Vincentiu
                      """)
 
         uploaded_file = st.file_uploader("Choose an Excel file", type="xlsx")
+        sel1, sel2 = st.columns(2)
     but1, but2, but3, but4 = st.columns(4, gap="small")
 
     if uploaded_file:
@@ -45,7 +46,7 @@ def project_tracker():
 # ---------- DATABASE WITH ALL INFORMATIONS -----------------
     
 
-    sel1, sel2 = st.columns(2)
+    
     with sel1:
             selected_day = st.date_input("Day started", value=None, min_value="2025-09-01")
 
