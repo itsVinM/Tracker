@@ -85,11 +85,6 @@ def project_tracker():
             if col in data.columns:
                 data[col] = data[col].astype(bool)
     
-    if st.button("➕ Add Empty Row"):
-        empty_row = {col: None for col in data.columns}
-        data = pd.concat([data, pd.DataFrame([empty_row])], ignore_index=True)
-        st.success("✅ Empty row added. You can now edit it in the table below.")
-
     # --- AgGrid Setup ---
     gb = GridOptionsBuilder.from_dataframe(data)
     gb.configure_default_column(editable=True)
@@ -100,6 +95,19 @@ def project_tracker():
             gb.configure_column(col, cellEditor='agCheckboxCellEditor', editable=True)
 
     grid_options = gb.build()
+    
+    # Create a pinned top row with empty values
+    pinned_row = {col: "" for col in data.columns}
+
+    if "Datasheet" in pinned_row:
+        pinned_row["Datasheet"] = False
+    if "Function" in pinned_row:
+        pinned_row["Function"] = False
+    if "EMC" in pinned_row:
+        pinned_row["EMC"] = False
+
+    # Add pinned row to grid options
+    grid_options['pinnedTopRowData'] = [pinned_row]
 
     grid_response = AgGrid(
             data,
@@ -113,9 +121,35 @@ def project_tracker():
 
     with but1:
             if st.button("💾 Save Changes"):
+                
+                # Extract the pinned row (first row)
+                edited_data = pd.DataFrame(grid_response["data"])
+                new_row = edited_data.iloc[0]
+
+                # Check if the pinned row has meaningful data
+                if any(str(val).strip() for val in new_row.values):
+                    # Append the new row to the rest of the data (excluding pinned row)
+                    updated_data = pd.concat([data, pd.DataFrame([new_row])], ignore_index=True)
+                else:
+                    updated_data = data.copy()
+
+                # Save to database
                 engine = create_engine('sqlite:///project_tracker.db')
-                edited_data.to_sql('ProjectTracker', con=engine, if_exists='replace', index=False)
+                updated_data.to_sql('ProjectTracker', con=engine, if_exists='replace', index=False)
+
                 st.success("Changes saved successfully.")
+
+                # Reset pinned row
+                pinned_row = {col: "" for col in data.columns}
+                if "Day" in pinned_row:
+                    pinned_row["Day"] = datetime.today().strftime("%Y-%m-%d")
+                for col in ["Datasheet", "Function", "EMC"]:
+                    if col in pinned_row:
+                        pinned_row[col] = False
+
+                # Update grid options with new empty pinned row
+                grid_options['pinnedTopRowData'] = [pinned_row]
+
 
     with but2:
             backup = BytesIO()
