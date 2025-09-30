@@ -1,16 +1,13 @@
-import streamlit as st
+import os, re, shutil, json, sqlite3, plotly
+
 import pandas as pd
 from docx import Document
-import os
 from datetime import datetime
-import re, shutil
-import plotly
 import plotly.figure_factory as ff
 import plotly.graph_objects as go
-import json
-import sqlite3
 from sqlalchemy import create_engine
 import matplotlib.pyplot as plt
+import streamlit as st
 
 def create_dut_chart(data, title, duration_days=3):
     # Rename columns for Gantt chart compatibility

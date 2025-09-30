@@ -48,7 +48,7 @@ def project_tracker():
             selected_day = st.date_input("Filter by 'Day'", value=None, min_value="2025-09-01")
 
         if selected_day:
-            data = data[data['Day'] >= selected_day.date]
+            data = data[data['Day'] >= pd.to_datetime(selected_day)]
 
         edited_data = st.data_editor(
                 data, 
