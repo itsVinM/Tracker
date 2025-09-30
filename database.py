@@ -15,17 +15,16 @@ def database():
         Request TEXT PRIMARY KEY,
         Reference INTEGER,
         Step TEXT,
-        Homologation TEXT,
-        Reason TEXT,
+        Datasheet BOOLEAN,
+        Function BOOLEAN,
+        EMC BOOLEAN,
+        Note TEXT
         Current TEXT,
         Used TEXT,
         Position TEXT,
         Day DATE,
         New TEXT,
-        Datasheet BOOLEAN,
-        Function BOOLEAN,
-        EMC BOOLEAN,
-        Note TEXT
+        
     )
     """)
     conn.commit()
@@ -42,13 +41,13 @@ def get_data_from_db(query):
     conn.close()
     return df
 
-def update_data(request_id, reference, step, reason, current, used, position, day, new, datasheet, function, emc, note):
+def update_data(request_id, reference, step, datasheet, function, emc, note, current, used, position, day, new):
     conn = sqlite3.connect('project_tracker.db')
     cursor = conn.cursor()
     cursor.execute('''
     UPDATE ProjectTracker
-    SET Reference = ?, Step = ?, Reason = ?, Current = ?, Used = ?, Position = ?, Day = ?, Datasheet = ?, Function = ?, EMC = ?
+    SET Reference = ?, Step = ?, Datasheet = ?, Function = ?, EMC = ?, Note = ?, Current = ?, Used = ?, Position = ?, Day = ?
     WHERE Request = ?
-    ''', (reference, step, reason, current, used, position, day, new, datasheet, function, emc, note, request_id))
+    ''', (reference, step, current, used, position, day, new, datasheet, function, emc, note, request_id))
     conn.commit()
     conn.close()
