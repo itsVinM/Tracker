@@ -15,6 +15,7 @@ def database():
         Request TEXT PRIMARY KEY,
         Reference INTEGER,
         Step TEXT,
+        Homologation TEXT,
         Reason TEXT,
         Current TEXT,
         Used TEXT,
