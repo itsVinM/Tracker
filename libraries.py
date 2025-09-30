@@ -12,117 +12,85 @@ import sqlite3
 from sqlalchemy import create_engine
 import matplotlib.pyplot as plt
 
-def database():
-    # Connect database or create one
-    conn=sqlite3.connect('project_tracker.db')
+################# DATABASE SECTION ##############
 
-    #create cursor object
-    cursor=conn.cursor()
-    # Create a table (if it doesn't exist)
+def database():
+    conn = sqlite3.connect('project_tracker.db')
+    cursor = conn.cursor()
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS ProjectTracker (
-        Id INTEGER PRIMARY KEY,
-        INFO TEXT,
-        PROJECT_ID TEXT KEY,
-        start_date DATE,
-        end_date DATE,
-        REPORTS TEXT
-    	)
+        Request TEXT PRIMARY KEY,
+        Reference INTEGER,
+        Step TEXT,
+        Reason TEXT,
+        Current TEXT,
+        Used TEXT,
+        Position TEXT,
+        Day DATE,
+        New TEXT,
+        Datasheet BOOLEAN,
+        Function BOOLEAN,
+        EMC BOOLEAN
+    )
     """)
-
-    # Commit changes and close the connection
     conn.commit()
     conn.close()
 
 def fill_database(file):
-    # Read the Excel file into a DataFrame
     excel = pd.read_excel(file)
-
-    # Define the mapping from Excel columns to database columns
-    column_mapping = {
-   
-        'PROJECT ID': 'PROJECT_ID',
-        'START DATE': 'start_date',
-        'END DATE': 'end_date',
-             
-    }
-    
-    # Rename the columns in the DataFrame according to the mapping
-    excel.rename(columns=column_mapping, inplace=True)
-    
-    # Create a SQLAlchemy engine
     engine = create_engine('sqlite:///project_tracker.db')
-
-    # Write data to the ProjectTracker table
     excel.to_sql('ProjectTracker', con=engine, if_exists='replace', index=False)
 
 def get_data_from_db(query):
     conn = sqlite3.connect('project_tracker.db')
     df = pd.read_sql_query(query, conn)
-    # Rename columns
-    df.columns = ["ID ","PROJECT ID", "INFO", "START DATE", "END DATE", "REPORTS"]
     conn.close()
     return df
 
-# Function to add a new row
-def add_row():
-    new_row = {'test_choice': 'New Option'}
-    st.session_state.data = st.session_state.data.append(new_row, ignore_index=True)
-
-
-def update_data(id,  test_choice, test_start_date, test_end_date, DUT_SN, DUT_LEG):
-    conn = sqlite3.connect('sqlite:///project_tracker.db')
+def update_data(request_id, reference, step, reason, current, used, position, day, new, datasheet, function, emc):
+    conn = sqlite3.connect('project_tracker.db')
     cursor = conn.cursor()
     cursor.execute('''
     UPDATE ProjectTracker
-    SET PROJECT_ID = ?, INFO=?,   start_date = ?, end_date = ?, REPORTS=?
-    WHERE id = ?
-    ''', (version, test_choice, test_start_date, test_end_date, DUT_SN, DUT_LEG, id))
+    SET Reference = ?, Step = ?, Reason = ?, Current = ?, Used = ?, Position = ?, Day = ?, New = ?, Datasheet = ?, Function = ?, EMC = ?
+    WHERE Request = ?
+    ''', (reference, step, reason, current, used, position, day, new, datasheet, function, emc, request_id))
     conn.commit()
     conn.close()
 
 
-def create_dut_chart(data, title):
-    # Create a new DataFrame with the required column names for the Gantt chart
+
+def create_dut_chart(data, title, duration_days=3):
+    # Rename columns for Gantt chart compatibility
     gantt_data = data.rename(columns={
         'START DATE': 'Start',
-        'END DATE': 'Finish',
-        'PROJECT ID': 'PROJECT ID',
+        'Used': 'Task'
     })
-    
-
-    gantt_data['Task'] = data['PROJECT ID'] 
 
     # Ensure all entries in the Task column are strings
     gantt_data['Task'] = gantt_data['Task'].astype(str)
-    
-    if gantt_data['Finish'].isnull().any():
-        today = datetime.today()
-        gantt_data['Finish'].fillna(today, inplace=True)
+
+    # Convert Start to datetime and compute Finish using fixed duration
+    gantt_data['Start'] = pd.to_datetime(gantt_data['Start'])
+    gantt_data['Finish'] = gantt_data['Start'] + pd.to_timedelta(duration_days, unit='d')
+
+    # Check if gantt_data is empty
+    if gantt_data.empty:
+        raise ValueError("No data available for the Gantt chart.")
 
     # Generate colors based on the number of unique tasks
     unique_tasks = gantt_data['Task'].nunique()
-    
-
-    # Check if gantt_data is empty after filtering
-    if gantt_data.empty:
-        raise ValueError("No data available for the selected DUT SN.")
-    
-    cmap = plt.get_cmap('tab20')  # You can choose other colormaps like 'tab10', 'viridis', etc.
+    cmap = plt.get_cmap('tab20')
     colors = [cmap(i) for i in range(unique_tasks)]
-    # Convert RGBA to hex
     colors = ['#%02x%02x%02x' % (int(r*255), int(g*255), int(b*255)) for r, g, b, _ in colors]
 
+    # Create Gantt chart
     fig = ff.create_gantt(gantt_data, index_col='Task', show_colorbar=True, group_tasks=True, colors=colors[:unique_tasks])
     fig.update_layout(title_text=title, xaxis_title='Timeline', autosize=True)
+
+    # Return chart as JSON
     return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
-def create_directory():
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    path=os.path.join(current_dir, "")
-    """Creates a directory if it doesn't exist."""
-    if not os.path.exists(path):
-        os.makedirs(path)
 
 def replace_placeholders(template_path, context, output_path):
     # Load the template document
