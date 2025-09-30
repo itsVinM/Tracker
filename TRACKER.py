@@ -62,7 +62,7 @@ def project_tracker():
     function(params) {
         if (params.data.Step === 'Failed') {
             return { 'backgroundColor': '#b71c1c', 'color': 'white' };  // dark red
-        } else if (params.data.Step === 'Ongoing') {
+        } else if (params.data.Step === 'Validation') {
             return { 'backgroundColor': '#f57f17', 'color': 'black' };  // dark amber
         } else if (params.data.Step === 'Passed') {
             return { 'backgroundColor': '#1b5e20', 'color': 'white' };  // dark green
@@ -163,7 +163,7 @@ def project_tracker():
                 with text1:
                     new_reference = st.text_input("Reference")
                 with  text2:
-                    new_step = st.selectbox("Step", ["Ongoing", "Passed", "Failed"])
+                    new_step = st.selectbox("Step", ["Validating", "Passed", "Failed", "Pending", "Datasheet"])
                 with text3:
                     new_reason = st.text_input("Reason")
                 with text4:
@@ -217,8 +217,6 @@ def project_tracker():
                     # Append the new row to the existing DataFrame
                     data = pd.concat([data, pd.DataFrame([new_row])], ignore_index=True)
                     st.success("✅ New row added successfully.")
-
-
 
 
 project_tracker()
