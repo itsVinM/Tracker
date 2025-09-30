@@ -163,7 +163,7 @@ def project_tracker():
                 with text1:
                     new_reference = st.text_input("Reference")
                 with  text2:
-                    new_step = st.selectbox("Step", ["Validating", "Passed", "Failed", "Pending", "Datasheet"])
+                    new_step = st.selectbox("Step", ["Validation", "Passed", "Failed", "Pending", "Datasheet"])
                 with text3:
                     new_reason = st.text_input("Reason")
                 with text4:
@@ -171,14 +171,14 @@ def project_tracker():
 
                 text5, text6, text7, data1=st.columns(4)
                 with text5:
-                    new_used = st.text_input("Used")
+                    new_used = st.text_input("Used in Product")
                 with text6:
-                    new_position = st.text_input("Position")
+                    new_position = st.text_input("Position in Schematics")
                 with text7:
-                    new_note=st.text_input("Notes")
+                    new_new=st.text_input("New Product")
                 with data1:
                     new_day = st.date_input("Day", value=datetime.today())
-
+                new_note=st.text_input("Notes")
                 check1, check2, check3=st.columns(3)
                 with check1:
                     new_datasheet = st.checkbox("Datasheet")     
@@ -205,6 +205,7 @@ def project_tracker():
                         "datasheet": new_datasheet,
                         "function": new_function,
                         "emc": new_emc,
+                        "new": new_new,
                         "note": new_note,
                         "request_id": new_request_id
                     }
