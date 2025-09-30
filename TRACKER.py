@@ -27,7 +27,7 @@ from database import *
 
 st.set_page_config(
       page_title="PRODUCT ENGINEERING - VALIDATION",
-      page_icon=":thunder",
+      page_icon=":battery",
       layout="wide", 
       
       )
