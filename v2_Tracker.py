@@ -11,7 +11,7 @@ from io import BytesIO
 from libraries import *
 from database import *
 
-from st_aggrid import AgGrid, GridOptionsBuilder, JsCode, GridUpdateCode
+from st_aggrid import AgGrid, GridOptionsBuilder, JsCode
 
 st.set_page_config(
       page_title="PRODUCT ENGINEERING - VALIDATION",
@@ -48,40 +48,41 @@ def project_tracker():
     for col in ["Datasheet", "Function", "EMC"]:
         if col in data.columns:
             data[col] = data[col].astype(bool)
-
-    
-    # Normalize Homologation column
-    data['Homologation'] = data['Homologation'].fillna("").astype(str)
-
-    # Prepare Request column for expansion (simulate nested grid)
-    def format_request(row):
-        request_items = str(row.get("Request", "")).split(";")  # assuming semicolon-separated
-        return [{"Item": item.strip()} for item in request_items if item.strip()]
-
-    data['RequestDetails'] = data.apply(lambda row: format_request(row), axis=1)
-
+    if st.button("➕ Add Empty Row"):
+        empty_row = {
+            "Request": "",
+            "Reference": 0,
+            "Homologated": "",
+            "Datasheet": False,
+            "Function": False,
+            "EMC": False,
+            "Note": "",
+            "Current": "",
+            "Used": "",
+            "Position": "",
+            "Day": datetime.today(),
+            "New": ""
+        }
+        data = pd.concat([data, pd.DataFrame([empty_row])], ignore_index=True)
     # --- AGGRID CONFIGURATION ---
+  
+# --- AGGRID CONFIGURATION ---
     gb = GridOptionsBuilder.from_dataframe(data)
     gb.configure_default_column(editable=True, groupable=True)
 
     # Conditional row styling based on Homologation status
-    
     cell_style_jscode = JsCode("""
     function(params) {
-        let status = params.data.Homologation;
-        if (typeof status === 'string') {
-            status = status.toLowerCase();
-            if (status.includes("validation")) {
-                return { 'backgroundColor': '#fff3cd' };  // Yellow
-            } else if (status.includes("passed")) {
-                return { 'backgroundColor': '#d4edda' };  // Green
-            } else if (status.includes("failed")) {
-                return { 'backgroundColor': '#f8d7da' };  // Red
-            }
+        let status = params.data.Homologation?.toLowerCase();
+        if (status.includes("verification")) {
+            return { 'backgroundColor': '#fff3cd' };  // Yellow
+        } else if (status.includes("passed")) {
+            return { 'backgroundColor': '#d4edda' };  // Green
+        } else if (status.includes("failed")) {
+            return { 'backgroundColor': '#f8d7da' };  // Red
         }
         return {};
     }
-
     """)
 
     gb.configure_grid_options(getRowStyle=cell_style_jscode)
