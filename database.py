@@ -11,22 +11,22 @@ def database():
     conn = sqlite3.connect('project_tracker.db')
     cursor = conn.cursor()
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS ProjectTracker (
-        Request TEXT PRIMARY KEY,
-        Reference INTEGER,
-        Homologated TEXT,
-        Datasheet BOOLEAN,
-        Function BOOLEAN,
-        EMC BOOLEAN,
-        Note TEXT
-        Current TEXT,
-        Used TEXT,
-        Position TEXT,
-        Day DATE,
-        New TEXT,
-        
-    )
+        CREATE TABLE IF NOT EXISTS ProjectTracker (
+            Request TEXT PRIMARY KEY,
+            Reference INTEGER,
+            Homologated TEXT,
+            Datasheet BOOLEAN,
+            Function BOOLEAN,
+            EMC BOOLEAN,
+            Note TEXT,
+            Current TEXT,
+            Used TEXT,
+            Position TEXT,
+            Day DATE,
+            New TEXT
+        )
     """)
+
     conn.commit()
     conn.close()
 
@@ -41,13 +41,15 @@ def get_data_from_db(query):
     conn.close()
     return df
 
+
 def update_data(request_id, reference, homologated, datasheet, function, emc, note, current, used, position, day, new):
     conn = sqlite3.connect('project_tracker.db')
     cursor = conn.cursor()
     cursor.execute('''
-    UPDATE ProjectTracker
-    SET Reference = ?, Homologated = ?, Datasheet = ?, Function = ?, EMC = ?, Note = ?, Current = ?, Used = ?, Position = ?, Day = ?
-    WHERE Request = ?
-    ''', (reference, homologated, current, used, position, day, new, datasheet, function, emc, note, request_id))
+        UPDATE ProjectTracker
+        SET Reference = ?, Homologated = ?, Datasheet = ?, Function = ?, EMC = ?, Note = ?, Current = ?, Used = ?, Position = ?, Day = ?, New = ?
+        WHERE Request = ?
+    ''', (reference, homologated, datasheet, function, emc, note, current, used, position, day, new, request_id))
     conn.commit()
     conn.close()
+
