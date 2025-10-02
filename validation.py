@@ -10,6 +10,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 from docx import Document
 
+from database import *
 import serial, can
 import time
 
