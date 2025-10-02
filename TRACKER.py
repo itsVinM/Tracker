@@ -40,9 +40,7 @@ class ValidationTracker:
 
         data['Progress'] = data.apply(
             lambda row: (
-                f"COMPLETED" 
-                if pd.notnull(row["Day"]) and row["Homologated"] in ["PASSED", "FAILED"]
-                else (pd.Timestamp.now() - row["Day"]).days if pd.notnull(row["Day"])
+                (pd.Timestamp.now() - row["Day"]).days if pd.notnull(row["Day"])
                 else 0
             ),
             axis=1
@@ -57,10 +55,10 @@ class ValidationTracker:
             "Progress": st.column_config.ProgressColumn(
                 "Progress", min_value=0, max_value=40, format="%.0f days"
             ),
-            
-            "Homologated": st.column_config.TextColumn(
-                "Homologated", help="Status of validation", validate=".*", required=False
-            )
+
+            "Homologation": st.column_config.SelectboxColumn(
+                        "Homologation",
+                        options=["⏳ VALIDATION", "❌ FAILED", "✅ PASSED"])            
         }
 
     def display_editor(self) -> pd.DataFrame:
