@@ -95,7 +95,7 @@ class ValidationTracker:
         homologation_counts = df['Homologated'].fillna("Unknown").value_counts()
         fig_homologation = px.pie(names=homologation_counts.index, values=homologation_counts.values, title="Homologation Status")
 
-        col1, col2, col3 = st.columns(3)
+        col1, col2 = st.columns(2)
         with col1:     
             st.plotly_chart(fig_homologation, use_container_width=True)
 
@@ -122,35 +122,29 @@ class ValidationTracker:
         else:
                 coverage_matrix.index = df.index.astype(str)
 
-        
-        # Melt the DataFrame to long format for stacked bar chart
-        df_melted = df.melt(id_vars="Product", value_vars=test_columns,
-                            var_name="Test Type", value_name="Passed")
+        # Generate heatmap
+        fig_coverage = px.imshow(
+                coverage_matrix,
+                labels=dict(x="Test Type", y="Sample | Product", color="Coverage"),
+                x=coverage_matrix.columns,
+                y=coverage_matrix.index,
+                color_continuous_scale="greens",  # ✅ valid colorscale
+                text_auto=True,
+                title="Test Coverage Matrix Heatmap"
+            )
 
-        # Filter only passed tests
-        df_passed = df_melted[df_melted["Passed"] == 1]
-
-        # Create stacked bar chart
-        fig_coverage = px.bar(
-            df_passed,
-            x="Sample => Product",
-            color="Test Type",
-            title="Test Coverage per Sample-Product Pair (Stacked Bar Chart)",
-            labels={"Sample => Product": "Sample => Product", "Test Type": "Test Passed"},
-            category_orders={"Sample => Product": sorted(df["Sample => Product"].unique())}
-        )
-
-        # Update layout for better readability
+            
+        # Update layout to increase chart size
         fig_coverage.update_layout(
-            autosize=True,
-            width=900,
-            height=600,
-            margin=dict(l=40, r=40, t=60, b=40)
-        )
+                    autosize=True,
+                    width=900,
+                    height=600,
+                    margin=dict(l=40, r=40, t=60, b=40)
+                )
 
-        # Display chart
+
+        # Display heatmap
         st.plotly_chart(fig_coverage, use_container_width=True)
-
 
     def replace_placeholders(template_path, context, output_path):
         # Load the template document
