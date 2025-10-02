@@ -85,30 +85,48 @@ class ValidationTracker:
 
     def display_charts(self):
         df = self.data
-        
-        # Pie charts for Datasheet, Function, EMC
+
+        # Count Checked and Unchecked for each category
         datasheet_counts = df['Datasheet'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
         function_counts = df['Function'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
         emc_counts = df['EMC'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
+        total_requests = df['Request'].nunique() if 'Request' in df.columns else len(df)
 
-        # Pie chart for Homologation status
+        # Homologation status counts
         homologation_counts = df['Homologated'].fillna("Unknown").value_counts()
-        
-        fig_homologation = px.pie(names=homologation_counts.index, values=homologation_counts.values)
 
-        col1, col2 = st.columns(2)
-        with col1:     
-            st.warning("Homologation Status")
-            st.plotly_chart(fig_homologation, use_container_width=True)
+        # Create grouped bar chart
+        fig = go.Figure()
 
-        
-        with col2:
-            # Summary metrics
-            st.success("Summary Metrics")
-            st.write(f"Total Requests: {df['Request'].nunique() if 'Request' in df.columns else len(df)}")
-            st.write(f"Datasheet Checked: {datasheet_counts.get('Checked', 0)}")
-            st.write(f"Function Checked: {function_counts.get('Checked', 0)}")
-            st.write(f"EMC Checked: {emc_counts.get('Checked', 0)}")
+        # Validation metrics (left axis)
+        fig.add_trace(go.Bar(name='Datasheet Checked', x=['Datasheet'], y=[datasheet_counts.get('Checked', 0)], marker_color='lightgreen'))
+        fig.add_trace(go.Bar(name='Datasheet Unchecked', x=['Datasheet'], y=[datasheet_counts.get('Unchecked', 0)], marker_color='lightred'))
+
+        fig.add_trace(go.Bar(name='Function Checked', x=['Function'], y=[function_counts.get('Checked', 0)], marker_color='lightgreen'))
+        fig.add_trace(go.Bar(name='Function Unchecked', x=['Function'], y=[function_counts.get('Unchecked', 0)], marker_color='lightred'))
+
+        fig.add_trace(go.Bar(name='EMC Checked', x=['EMC'], y=[emc_counts.get('Checked', 0)], marker_color='lightgreen'))
+        fig.add_trace(go.Bar(name='EMC Unchecked', x=['EMC'], y=[emc_counts.get('Unchecked', 0)], marker_color='lightred'))
+
+        fig.add_trace(go.Bar(name='Total Requests', x=['Total Requests'], y=[total_requests], marker_color='grey'))
+
+        # Homologation status (right axis)
+        fig.add_trace(go.Bar(name='Approved', x=['Approved'], y=[homologation_counts.get('Approved', 0)], marker_color='green', yaxis='y2'))
+        fig.add_trace(go.Bar(name='Rejected', x=['Rejected'], y=[homologation_counts.get('Rejected', 0)], marker_color='red', yaxis='y2'))
+
+        # Layout
+        fig.update_layout(
+            title="Validation Summary with Homologation Status",
+            barmode='group',
+            xaxis_title="Category",
+            yaxis=dict(title='Validation Counts'),
+            yaxis2=dict(title='Homologation Counts', overlaying='y', side='right'),
+            width=1000,
+            height=600
+        )
+
+        # Display in Streamlit
+        st.plotly_chart(fig, use_container_width=True)
 
 
     def replace_placeholders(template_path, context, output_path):
