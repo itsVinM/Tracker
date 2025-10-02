@@ -1,5 +1,4 @@
-import os
-import json
+import os, re, shutil, json, sqlite3, plotly
 import pandas as pd
 import streamlit as st
 from io import BytesIO
@@ -10,6 +9,7 @@ import plotly.figure_factory as ff
 import plotly.graph_objects as go
 import plotly.express as px
 import matplotlib.pyplot as plt
+from docx import Document
  
 from database import *   
 
@@ -85,41 +85,27 @@ class ValidationTracker:
 
     def display_charts(self):
         df = self.data
-
+        
         # Pie charts for Datasheet, Function, EMC
         datasheet_counts = df['Datasheet'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
         function_counts = df['Function'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
         emc_counts = df['EMC'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
 
-        fig_datasheet = px.pie(names=datasheet_counts.index, values=datasheet_counts.values, title="Datasheet Check Status")
-        fig_function = px.pie(names=function_counts.index, values=function_counts.values, title="Function Check Status")
-        fig_emc = px.pie(names=emc_counts.index, values=emc_counts.values, title="EMC Check Status")
-
         # Pie chart for Homologation status
         homologation_counts = df['Homologated'].fillna("Unknown").value_counts()
         fig_homologation = px.pie(names=homologation_counts.index, values=homologation_counts.values, title="Homologation Status")
 
-        # Histogram for Progress
-        fig_progress = px.histogram(df, x='Progress', nbins=20, title="Progress Over Time")
-
-        # Display charts in columns
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.plotly_chart(fig_datasheet, use_container_width=True)
-        with col2:
-            st.plotly_chart(fig_function, use_container_width=True)
-        with col3:
-            st.plotly_chart(fig_emc, use_container_width=True)
-
-        col4, col5 = st.columns(2)
-        with col4:
+        col1, col2 = st.columns(2)
+        with col1:     
             st.plotly_chart(fig_homologation, use_container_width=True)
-        with col5:
-            st.plotly_chart(fig_progress, use_container_width=True)
+        with col2:
+            # Summary metrics
+            st.markdown("### Summary Metrics")
+            st.write(f"Total Requests: {df['Request'].nunique() if 'Request' in df.columns else len(df)}")
+            st.write(f"Datasheet Checked: {datasheet_counts.get('Checked', 0)}")
+            st.write(f"Function Checked: {function_counts.get('Checked', 0)}")
+            st.write(f"EMC Checked: {emc_counts.get('Checked', 0)}")
 
-        # Summary metrics
-        st.markdown("### Summary Metrics")
-        st.write(f"Total Requests: {df['Request'].nunique() if 'Request' in df.columns else len(df)}")
 
 
     def replace_placeholders(template_path, context, output_path):
