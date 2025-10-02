@@ -109,7 +109,7 @@ class ValidationTracker:
 
             # Combine product name with sample ID (or use any other column)
             if "New" in df.columns and "Product" in df.columns:
-                coverage_matrix.index = df["New"].astype(str) + " => " + df["Product"].astype(str)
+                coverage_matrix.index = df["Product"].astype(str)+ " => " + df["New"].astype(str) 
             elif "New" in df.columns:
                 coverage_matrix.index = df["New"].astype(str)
             else:
@@ -129,7 +129,7 @@ class ValidationTracker:
             
             # Update layout to increase chart size
             fig_coverage.update_layout(
-                    autosize=False,
+                    autosize=True,
                     width=900,
                     height=600,
                     margin=dict(l=40, r=40, t=60, b=40)
