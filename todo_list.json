@@ -8,5 +8,15 @@
     "task": "Rubben 's email for new component",
     "priority": "Medium",
     "due_date": "2025-10-02"
+  },
+  {
+    "task": "CLI design",
+    "priority": "Low",
+    "due_date": "2025-12-01"
+  },
+  {
+    "task": "Homologation Inductor 2025-160",
+    "priority": "Medium",
+    "due_date": "2025-10-10"
   }
 ]
