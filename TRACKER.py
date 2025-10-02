@@ -8,7 +8,10 @@ from typing import List, Dict
 import plotly.figure_factory as ff
 import plotly.graph_objects as go
 import plotly.express as px
-from docx import Document
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib import colors
 
 import serial, can
 import time
@@ -112,103 +115,65 @@ class ValidationTracker:
         st.plotly_chart(fig, use_container_width=True)
 
 
-    def replace_placeholders(template_path, context, output_path):
-        # Load the template document
-        if not os.path.exists(template_path):
-            print(f"Error: The file at {template_path} does not exist.")
-            return None
-        try:
-            doc = Document(template_path)
-        except Exception as e:
-            print(f"Error loading template: {e}")
-            return None
-        
-        # Iterate over each paragraph in the document
-        for paragraph in doc.paragraphs:
-            for placeholder, value in context.items():
-                if placeholder in paragraph.text:
-                    paragraph.text = paragraph.text.replace(placeholder, value)
-        
-        # Iterate over each table in the document
-        for table in doc.tables:
-            for row in table.rows:
-                for cell in row.cells:
-                    for placeholder, value in context.items():
-                        if placeholder in cell.text:
-                            cell.text = cell.text.replace(placeholder, str(value))
-        
-        # Save the modified document to the specified output path
-        doc.save(output_path)
-        
-        return output_path
+    def generate_pdf_report(report_df):
+        # Create an in-memory buffer to hold the PDF
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        story = []
+        styles = getSampleStyleSheet()
 
-    def generate_report(report_df, template_path, file_path, test_engineer):
-        today = datetime.today()
-        today_string = today.strftime("%d/%m/%Y")
-        today=today.strftime("%d%m%Y")
-        # Iterate over the DataFrame rows
-        for index, row in report_df.iterrows():
-            
-            report_no = f"{row['PROJECT ID']}_{today}_v0"
-            
-            # Format the period without time using pd.Timestamp
-            row["Test Start Date"] = pd.Timestamp(row["START DATE"]).strftime("%d/%m/%Y")
-            row["Test End Date"] = pd.Timestamp(row["END DATE"]).strftime("%d/%m/%Y")
-            
-            period = f"{row['START DATE']} - {row['END DATE']}"
-            if test_engineer:
-                parts = test_engineer.lower().split(" ")
-                
-                email = parts[0] + "." + parts[1] + "@gmail.com"
-                context = {
+        # Add a title and header information
+        story.append(Paragraph("Validation Summary Report", styles['Title']))
+        story.append(Spacer(1, 12))
+        story.append(Paragraph(f"Report Date: {datetime.today().strftime('%B %d, %Y')}", styles['Normal']))
+        story.append(Spacer(1, 24))
+        
+        # Add a summary of the data
+        num_components = len(report_df)
+        passed_count = len(report_df[report_df['Status'] == 'PASSED'])
+        failed_count = len(report_df[report_df['Status'] == 'FAILED'])
+        
+        story.append(Paragraph(f"Summary: A total of {num_components} components were tracked.", styles['Normal']))
+        story.append(Paragraph(f"Passed: {passed_count} components.", styles['Normal']))
+        story.append(Paragraph(f"Failed: {failed_count} components.", styles['Normal']))
+        story.append(Spacer(1, 24))
+
+        # Add the main data table
+        data = [list(report_df.columns)] + report_df.values.tolist()
+        table_style = TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('BOX', (0, 0), (-1, -1), 1, colors.black),
+        ])
+        table = Table(data, style=table_style)
+        story.append(table)
+        
+        # Build the PDF and prepare it for download
+        doc.build(story)
+        
+        return st.download_button(
+            label="📥 Download PDF Report",
+            data=buffer.getvalue(),
+            file_name=f"Validation_Report_{datetime.today().strftime('%Y%m%d')}.pdf",
+            mime="application/pdf"
+        )
+
     
-                    "{PROJECT ID}": row["PROJECT ID"],
-                    "{REPORT_NO}": report_no,
-                    "{PERIOD}": period,
-                    "{MAIL}": email,
-
-                }
-                file_name = report_no
-                # Generate a unique output file path
-                output_file_path = os.path.join(os.path.dirname(file_path), f"{file_name}.pdf")
-            
-
-                # Replace placeholders in the template and save to the new file
-                replace_placeholders(template_path, context,file_path)
-            else:
-                raise Exception("Who is the engineer?")
-                
-
-    def load_template(test_value):
-            # Get the absolute path of the current script
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        test_value = test_value.strip()
-        
-        # Construct the full path to the template directory
-        template_dir = os.path.join(current_dir, "TEMPLATES")
-        template_path = os.path.join(template_dir, f"{test_value}.docx")
-        
-        if os.path.exists(template_path):
-            return template_path
-        else:
-            st.error(f"Template for {test_value} not found.")
-            return None
 
 
 def project_tracker():
     with st.sidebar:
         st.markdown("📊 Validation tracker by Vincentiu")
         uploaded_file = st.file_uploader("Choose an Excel file", type="xlsx")
-        debug_mode = st.checkbox("🔧 Developer Mode", value=False)
         if uploaded_file:
             fill_database(uploaded_file)
             st.success("Database has been populated successfully.")
 
-    tab1, tab2 = st.tabs(["📊 Validation request", "📥Todo!"])
+    tab1, tab2, tab3= st.tabs(["📊 Validation request", "📥Todo!", "📥Report"])
 
     with tab1:
         tracker = ValidationTracker()
-        but1, but2, but3 = st.columns(3, gap="small")
+        but1, but2 = st.columns(2, gap="small")
         st.text("MOS, Diodes and all resonant components need EMC & Functionality test")
         edited_data = tracker.display_editor()
         tracker.display_charts()
@@ -217,11 +182,6 @@ def project_tracker():
                 tracker.save_changes(edited_data)
         with but2:
             tracker.download_backup(edited_data)
-        if debug_mode:
-            with but3:
-                if st.button("📥 Reports"):
-                    tracker.generate_reports(edited_data)
-            
 
     with tab2:
         todo = TodoManager()
@@ -229,5 +189,10 @@ def project_tracker():
             todo.add_task()
         todo.display_calendar()
 
+    with tab3:
+            # Button to generate and download the report
+            if st.button("Generate Report"):
+                # Pass the current DataFrame to the new function
+                ValidationTracker.generate_pdf_report(st.session_state['data'])
 
 project_tracker()
