@@ -111,8 +111,8 @@ class ValidationTracker:
         fig.add_trace(go.Bar(name='Total Requests', x=['Total Requests'], y=[total_requests], marker_color='grey'))
 
         # Homologation status (right axis)
-        fig.add_trace(go.Bar(name='Approved', x=['Approved'], y=[homologation_counts.get('Approved', 0)], marker_color='green', yaxis='y2'))
-        fig.add_trace(go.Bar(name='Rejected', x=['Rejected'], y=[homologation_counts.get('Rejected', 0)], marker_color='red', yaxis='y2'))
+        fig.add_trace(go.Bar(name='Approved', x=['Homologation'], y=[homologation_counts.get('Approved', 0)], marker_color='green', yaxis='y2'))
+        fig.add_trace(go.Bar(name='Rejected', x=['Homologation'], y=[homologation_counts.get('Rejected', 0)], marker_color='red', yaxis='y2'))
 
         # Layout
         fig.update_layout(
@@ -121,7 +121,7 @@ class ValidationTracker:
             xaxis_title="Category",
             yaxis=dict(title='Validation Counts'),
             yaxis2=dict(title='Homologation Counts', overlaying='y', side='right'),
-            width=1000,
+            width=800,
             height=600
         )
 
