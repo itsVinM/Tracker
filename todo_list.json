@@ -18,5 +18,15 @@
     "task": "Converter Simulation",
     "priority": "Low",
     "due_date": "2026-01-31"
+  },
+  {
+    "task": "Add to Plannerto find substitute to  Ref. '36010129 (FQA30N40 MOS N 400V 0R14 TO247) & '36010137 (IXFK34N80 MOS N 800V 0R24 TO264 IXFX34N80)",
+    "priority": "Low",
+    "due_date": "2025-10-02"
+  },
+  {
+    "task": "Move on with product @ testbench (some mosfets)",
+    "priority": "High",
+    "due_date": "2025-10-16"
   }
 ]
