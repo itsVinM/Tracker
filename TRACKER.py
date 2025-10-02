@@ -92,8 +92,6 @@ class ValidationTracker:
         emc_counts = df['EMC'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
         total_requests = df['Request'].nunique() if 'Request' in df.columns else len(df)
 
-        # Homologation status counts
-        homologation_counts = df['Homologated'].fillna("Unknown").value_counts()
 
         # Create grouped bar chart
         fig = go.Figure()
@@ -110,17 +108,13 @@ class ValidationTracker:
 
         fig.add_trace(go.Bar(name='Total Requests', x=['Total Requests'], y=[total_requests], marker_color='grey'))
 
-        # Homologation status (right axis)
-        fig.add_trace(go.Bar(name='Approved', x=['Homologation'], y=[homologation_counts.get('Approved', 0)], marker_color='lightgreen', yaxis='y2'))
-        fig.add_trace(go.Bar(name='Rejected', x=['Homologation'], y=[homologation_counts.get('Rejected', 0)], marker_color='salmon', yaxis='y2'))
-
+        
         # Layout
         fig.update_layout(
-            title="Validation Summary with Homologation Status",
+            title="Validation Summary",
             barmode='group',
             xaxis_title="Category",
             yaxis=dict(title='Validation Counts'),
-            yaxis2=dict(title='Homologation Counts', overlaying='y', side='right'),
             width=800,
             height=600
         )
