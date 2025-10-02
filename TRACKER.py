@@ -38,13 +38,16 @@ class ValidationTracker:
         if 'Homologated' not in data.columns:
             data['Homologated'] = ""
 
+        
         data['Progress'] = data.apply(
             lambda row: (
-                (pd.Timestamp.now() - row["Day"]).days if pd.notnull(row["Day"])
+                (pd.Timestamp.now() - row["Day"]).days 
+                if pd.notnull(row["Day"]) and row["Homologated"] not in ["PASSED", "FAILED"]
                 else 0
             ),
             axis=1
         )
+
         return data
 
     def get_column_config(self) -> Dict[str, st.column_config.Column]:
