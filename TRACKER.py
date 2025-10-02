@@ -116,7 +116,7 @@ class ValidationTracker:
 
         # Combine product name with sample ID (or use any other column)
         if "New" in df.columns and "Product" in df.columns:
-                coverage_matrix.index = df["Request"] + "_" +df["Product"].astype(str)+ " => " + df["New"].astype(str) 
+                coverage_matrix.index = df["Request"] + " => " +df["Product"].astype(str)+ " => " + df["New"].astype(str) 
         elif "New" in df.columns:
                 coverage_matrix.index = df["New"].astype(str)
         else:
