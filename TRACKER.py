@@ -58,7 +58,7 @@ class ValidationTracker:
 
             "Homologated": st.column_config.SelectboxColumn(
                         "Homologated",
-                        options=["⏳ AWAITING", "🛠️ VALIDATION", "📡 EMC","❌ FAILED", "✅ PASSED"])            
+                        options=["⏳AWAIT", "🛠️FUNCTION", "📡 EMC","❌ FAILED", "✅ PASSED"])            
         }
 
     def display_editor(self) -> pd.DataFrame:
