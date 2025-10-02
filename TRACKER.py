@@ -121,16 +121,22 @@ class TodoManager:
         df = df.sort_values("due_date")
 
         priority_colors = {
-            "High": "#af291f",   # Red
-            "Medium": "#ad9f19", # Yellow
+            "High": "#902018",   # Red
+            "Medium": "#93871c", # Yellow
             "Low": "#2b6a2d"     # Green
         }
 
+        # Start Kanban layout
         st.markdown("""
         <div style="display: flex; justify-content: space-between; gap: 20px;">
         """, unsafe_allow_html=True)
 
         for priority in ["Low", "Medium", "High"]:
+            st.markdown(f"""
+            <div style="flex: 1; background-color: #f0f0f0; padding: 10px; border-radius: 8px;">
+                <h4 style="text-align: center; color: {priority_colors[priority]};">{priority} Priority</h4>
+            """, unsafe_allow_html=True)
+
             priority_tasks = df[df["priority"] == priority]
             if priority_tasks.empty:
                 st.markdown("<p style='text-align:center;'>No tasks</p>", unsafe_allow_html=True)
@@ -138,19 +144,18 @@ class TodoManager:
                 for i, row in priority_tasks.iterrows():
                     due_date = row["due_date"]
                     date_str = due_date.strftime('%d %b %Y') if pd.notnull(due_date) else "No due date"
-
-                    # Unique key for each task
                     task_key = f"{row['task']}_{i}"
 
                     st.markdown(f"""
                     <div style="background-color:{priority_colors[priority]}; padding:6px; border-radius:6px; margin-bottom:6px; font-size:13px; color:white;">
-                        <strong>{row['priority']} Priority</strong><br>
                         📝 <strong>{row['task']}</strong><br>
-                        📆 <em>{date_str}</em><br>
+                        📆 <em>{date_str}</em>
+                    </div>
                     """, unsafe_allow_html=True)
 
-                    if st.button(f"❌ Cancel", key=task_key):
-                        if st.confirm(f"Are you sure you want to cancel '{row['task']}'?"):
+                    with st.expander("❌ Cancel Task", expanded=False):
+                        confirm_key = f"confirm_{task_key}"
+                        if st.checkbox(f"Confirm cancel '{row['task']}'", key=confirm_key):
                             todos.remove({
                                 "task": row["task"],
                                 "priority": row["priority"],
@@ -160,11 +165,10 @@ class TodoManager:
                             st.success(f"Task '{row['task']}' cancelled.")
                             st.experimental_rerun()
 
-                    st.markdown("</div>", unsafe_allow_html=True)
-
             st.markdown("</div>", unsafe_allow_html=True)
-        else:
-            st.info("No tasks scheduled.")
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
 
     
     def add_task(self):
