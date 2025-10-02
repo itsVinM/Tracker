@@ -93,16 +93,18 @@ class ValidationTracker:
 
         # Pie chart for Homologation status
         homologation_counts = df['Homologated'].fillna("Unknown").value_counts()
-        fig_homologation = px.pie(names=homologation_counts.index, values=homologation_counts.values, title="Homologation Status")
+        
+        fig_homologation = px.pie(names=homologation_counts.index, values=homologation_counts.values)
 
         col1, col2 = st.columns(2)
         with col1:     
+            st.warning("Homologation Status")
             st.plotly_chart(fig_homologation, use_container_width=True)
 
         
         with col2:
             # Summary metrics
-            st.markdown("### Summary Metrics")
+            st.success("Summary Metrics")
             st.write(f"Total Requests: {df['Request'].nunique() if 'Request' in df.columns else len(df)}")
             st.write(f"Datasheet Checked: {datasheet_counts.get('Checked', 0)}")
             st.write(f"Function Checked: {function_counts.get('Checked', 0)}")
