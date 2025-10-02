@@ -111,40 +111,39 @@ class TodoManager:
             json.dump(todos, f, indent=2)
 
     def display_calendar(self):
-    todos = self.load_todo()
-    if todos:
-        df = pd.DataFrame(todos)
-        df["due_date"] = pd.to_datetime(df["due_date"], errors="coerce")
-        df = df.sort_values("due_date")
+        todos = self.load_todo()
+        if todos:
+            df = pd.DataFrame(todos)
+            df["due_date"] = pd.to_datetime(df["due_date"], errors="coerce")
+            df = df.sort_values("due_date")
 
-        # Define color mapping
-        priority_colors = {
-            "High": "#f44336",   # Red
-            "Medium": "#ffeb3b", # Yellow
-            "Low": "#4caf50"     # Green
-        }
+            # Define color mapping
+            priority_colors = {
+                "High": "#f44336",   # Red
+                "Medium": "#ffeb3b", # Yellow
+                "Low": "#4caf50"     # Green
+            }
 
-        for date in sorted(df["due_date"].dropna().unique()):
-            st.markdown(f"### 📆 {date.strftime('%A, %d %B %Y')}")
-            day_tasks = df[df["due_date"] == date]
-            for _, row in day_tasks.iterrows():
-                color = priority_colors.get(row["priority"], "#ffffff")
-                st.markdown(
-                    f"""
-                    <div style="background-color:{color}; padding:8px; border-radius:6px; margin-bottom:6px; font-size:14px;">
-                        <strong>{row['priority']} Priority</strong><br>
-                        📝 {row['task']}<br>
-                        ⏰ <em>{row['due_date'].strftime('%d %b %Y')}</em>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-    else:
-        st.info("No tasks scheduled.")
+            for date in sorted(df["due_date"].dropna().unique()):
+                st.markdown(f"### 📆 {date.strftime('%A, %d %B %Y')}")
+                day_tasks = df[df["due_date"] == date]
+                for _, row in day_tasks.iterrows():
+                    color = priority_colors.get(row["priority"], "#ffffff")
+                    st.markdown(
+                        f"""
+                        <div style="background-color:{color}; padding:8px; border-radius:6px; margin-bottom:6px; font-size:14px;">
+                            <strong>{row['priority']} Priority</strong><br>
+                            📝 {row['task']}<br>
+                            ⏰ <em>{row['due_date'].strftime('%d %b %Y')}</em>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+        else:
+            st.info("No tasks scheduled.")
 
-    with st.expander:
+    with st.expander("➕ Add New To-Do Item"):
         def add_task(self):
-            st.text("➕ Add New To-Do Item")
             new_task = st.text_input("Enter a new task")
             priority = st.selectbox("Select priority", self.PRIORITY_LEVELS)
             due_date = st.date_input("Select due date", value=datetime.today())
