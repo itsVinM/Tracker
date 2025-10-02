@@ -106,13 +106,13 @@ class ValidationTracker:
         fig.add_trace(go.Bar(name='Function Unchecked', x=['Function'], y=[function_counts.get('Unchecked', 0)], marker_color='lightcoral'))
 
         fig.add_trace(go.Bar(name='EMC Checked', x=['EMC'], y=[emc_counts.get('Checked', 0)], marker_color='mediumseagreen'))
-        fig.add_trace(go.Bar(name='EMC Unchecked', x=['EMC'], y=[emc_counts.get('Unchecked', 0)], marker_color='tomato'))
+        #fig.add_trace(go.Bar(name='EMC Unchecked', x=['EMC'], y=[emc_counts.get('Unchecked', 0)], marker_color='tomato'))
 
         fig.add_trace(go.Bar(name='Total Requests', x=['Total Requests'], y=[total_requests], marker_color='grey'))
 
         # Homologation status (right axis)
-        fig.add_trace(go.Bar(name='Approved', x=['Homologation'], y=[homologation_counts.get('Approved', 0)], marker_color='green', yaxis='y2'))
-        fig.add_trace(go.Bar(name='Rejected', x=['Homologation'], y=[homologation_counts.get('Rejected', 0)], marker_color='red', yaxis='y2'))
+        fig.add_trace(go.Bar(name='Approved', x=['Approved'], y2=[homologation_counts.get('Approved', 0)], marker_color='green', yaxis='y2'))
+        fig.add_trace(go.Bar(name='Rejected', x=['Rejected'], y2=[homologation_counts.get('Rejected', 0)], marker_color='red', yaxis='y2'))
 
         # Layout
         fig.update_layout(
