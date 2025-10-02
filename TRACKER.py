@@ -95,10 +95,34 @@ class ValidationTracker:
         homologation_counts = df['Homologated'].fillna("Unknown").value_counts()
         fig_homologation = px.pie(names=homologation_counts.index, values=homologation_counts.values, title="Homologation Status")
 
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
         with col1:     
             st.plotly_chart(fig_homologation, use_container_width=True)
+
         with col2:
+            
+            # Optional: Define your test columns
+            test_columns = ["Datasheet", "Function", "EMC"]  
+
+            # Create binary coverage matrix (1 = Checked, 0 = Unchecked)
+            coverage_matrix = df[test_columns].fillna(False).astype(int)
+            coverage_matrix.index = df["New"] if "New" in df.columns else df.index
+
+            # Generate heatmap
+            fig_coverage = px.imshow(
+                coverage_matrix,
+                labels=dict(x="Test Type", y="Sample ID", color="Coverage"),
+                x=coverage_matrix.columns,
+                y=coverage_matrix.index,
+                color_continuous_scale="Greens",
+                text_auto=True,
+                title="Test Coverage Matrix Heatmap"
+            )
+
+            # Display heatmap
+            st.plotly_chart(fig_coverage, use_container_width=True)
+
+        with col3:
             # Summary metrics
             st.markdown("### Summary Metrics")
             st.write(f"Total Requests: {df['Request'].nunique() if 'Request' in df.columns else len(df)}")

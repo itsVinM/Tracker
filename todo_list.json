@@ -18,5 +18,10 @@
     "task": "Homologation Inductor 2025-160",
     "priority": "Medium",
     "due_date": "2025-10-10"
+  },
+  {
+    "task": "Converter Simulation",
+    "priority": "Low",
+    "due_date": "2026-01-31"
   }
 ]
