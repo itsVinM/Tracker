@@ -208,7 +208,7 @@ def project_tracker():
 
     with tab1:
         tracker = ValidationTracker()
-        but1, but2, but3, but4 = st.columns(4, gap="small")
+        but1, but2, but3 = st.columns(3, gap="small")
         st.text("MOS, Diodes and all resonant components need EMC & Functionality test")
         edited_data = tracker.display_editor()
         tracker.display_charts()
@@ -219,11 +219,9 @@ def project_tracker():
             tracker.download_backup(edited_data)
         if debug_mode:
             with but3:
-                if st.button("📥 High volume reports"):
+                if st.button("📥 Reports"):
                     tracker.generate_reports(edited_data)
-            with but4:
-                if st.button("💼 Single report"):
-                    st.info("Single report generation logic goes here.")
+            
 
     with tab2:
         todo = TodoManager()
