@@ -79,14 +79,6 @@ class ValidationTracker:
             file_name=f"Backup_Project_Tracker_{today}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
-    
-with st.sidebar:
-    st.markdown("Validation tracker by Vincentiu")
-    uploaded_file = st.file_uploader("Choose an Excel file", type="xlsx")
-    debug_mode = st.checkbox("🔧 Developer Mode", value=False)
-    if uploaded_file:
-        fill_database(uploaded_file)
-        st.success("Database has been populated successfully.")
 
 
 # --- To-Do Manager Class ---
@@ -118,23 +110,41 @@ class TodoManager:
         with open(self.TODO_FILE, "w") as f:
             json.dump(todos, f, indent=2)
 
+    
     def display_calendar(self):
-        st.subheader("📅 Calendar View of Tasks")
         todos = self.load_todo()
         if todos:
             df = pd.DataFrame(todos)
             df["due_date"] = pd.to_datetime(df["due_date"], errors="coerce")
             df = df.sort_values("due_date")
+
+            # Define color mapping
+            priority_colors = {
+                "High": "#f44336",   # Red
+                "Medium": "#ffeb3b", # Yellow
+                "Low": "#4caf50"     # Green
+            }
+
             for date in sorted(df["due_date"].dropna().unique()):
                 st.markdown(f"### 📆 {date.strftime('%A, %d %B %Y')}")
                 day_tasks = df[df["due_date"] == date]
                 for _, row in day_tasks.iterrows():
-                    st.markdown(f"- 🔺 **{row['priority']}**: {row['task']}")
+                    color = priority_colors.get(row["priority"], "#ffffff")
+                    st.markdown(
+                        f"""
+                        <div style="background-color:{color}; padding:10px; border-radius:5px; margin-bottom:5px;">
+                            <strong>{row['priority']} Priority</strong><br>
+                            📝 {row['task']}
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
         else:
+
             st.info("No tasks scheduled.")
 
     def add_task(self):
-        st.subheader("➕ Add New To-Do Item")
+        st.text("➕ Add New To-Do Item")
         new_task = st.text_input("Enter a new task")
         priority = st.selectbox("Select priority", self.PRIORITY_LEVELS)
         due_date = st.date_input("Select due date", value=datetime.today())
@@ -151,36 +161,7 @@ class TodoManager:
             else:
                 st.warning("Please enter a valid task.")
 
-    def show_urgent_popup(self):
-        todos = self.load_todo()
-        if todos:
-            df = pd.DataFrame(todos)
-            df["due_date"] = pd.to_datetime(df["due_date"], errors="coerce")
-            df["priority_rank"] = df["priority"].map({"High": 1, "Medium": 2, "Low": 3})
-            df = df.sort_values(["priority_rank", "due_date"])
-            urgent = df.iloc[0]
-            
-            st.markdown(
-                f"""
-                <div style="
-                    position: fixed;
-                    top: 10px;
-                    right: 10px;
-                    background-color: #f44336;
-                    color: white;
-                    padding: 10px 20px;
-                    border-radius: 10px;
-                    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-                    z-index: 1000;
-                ">
-                    🔔 <strong>Urgent Task:</strong> {urgent['task']}<br>
-                    ⏰ Due: {urgent['due_date'].strftime('%d %b %Y') if pd.notnull(urgent['due_date']) else 'No due date'}<br>
-                    🔺 Priority: {urgent['priority']}
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-
+    
 
 # --- Main App ---
 def project_tracker():

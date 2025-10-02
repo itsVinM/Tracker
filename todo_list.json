@@ -1,10 +1,17 @@
 [
   {
     "task": "[2025 Oct] EMC training reading",
-    "priority": "High"
+    "priority": "High",
+    "due_date": ""
   },
   {
     "task": "[2025 Oct] Rubben's email MOS N",
-    "priority": "High"
+    "priority": "High",
+    "due_date": ""
+  },
+  {
+    "task": "EMC's standard procedure",
+    "priority": "High",
+    "due_date": "2025-10-06"
   }
 ]
