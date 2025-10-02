@@ -37,6 +37,7 @@ class ValidationTracker:
                 data[col] = data[col].astype(bool)
         if 'Homologated' not in data.columns:
             data['Homologated'] = ""
+            
         data['Progress'] = data.apply(
             lambda row: 0 if row["Homologated"] in ["Passed", "Failed"]
             else (pd.Timestamp.now() - row["Day"]).days if pd.notnull(row["Day"]) else 0,
@@ -53,6 +54,7 @@ class ValidationTracker:
             "Progress": st.column_config.ProgressColumn(
                 "Progress", min_value=0, max_value=40, format="%.0f days"
             ),
+            
             "Homologated": st.column_config.TextColumn(
                 "Homologated", help="Status of validation", validate=".*", required=False
             )
