@@ -30,23 +30,11 @@ class ValidationTracker:
         data = get_data_from_db(self.query)
 
         # Enforce data types
-        if 'Day' in data.columns:
-            data['Day'] = pd.to_datetime(data['Day'], errors='coerce')
         for col in ['Datasheet', 'Function', 'EMC']:
             if col in data.columns:
                 data[col] = data[col].astype(bool)
         if 'Homologated' not in data.columns:
             data['Homologated'] = ""
-
-        
-        data['Progress'] = data.apply(
-            lambda row: (
-                (pd.Timestamp.now() - row["Day"]).days 
-                if pd.notnull(row["Day"]) and row["Homologated"] not in ["✅ PASSED", "❌ FAILED"]
-                else 0
-            ),
-            axis=1
-        )
 
         return data
 
@@ -55,10 +43,6 @@ class ValidationTracker:
             "Datasheet": st.column_config.CheckboxColumn("Datasheet", default=False),
             "Function": st.column_config.CheckboxColumn("Function", default=False),
             "EMC": st.column_config.CheckboxColumn("EMC", default=False),
-            "Progress": st.column_config.ProgressColumn(
-                "Progress", min_value=0, max_value=40, format="%.0f days"
-            ),
-
             "Homologated": st.column_config.SelectboxColumn(
                         "Homologated",
                         options=["⏳AWAIT", "🛠️FUNCTION", "📡 EMC","❌ FAILED", "✅ PASSED"])            
