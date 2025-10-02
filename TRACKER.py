@@ -166,7 +166,7 @@ class TodoManager:
 def project_tracker():
     
     with st.sidebar:
-        st.markdown("Validation tracker by Vincentiu")
+        st.markdown("📊 Validation tracker by Vincentiu")
         uploaded_file = st.file_uploader("Choose an Excel file", type="xlsx")
         debug_mode = st.checkbox("🔧 Developer Mode", value=False)
         if uploaded_file:
