@@ -103,10 +103,9 @@ class ValidationTracker:
 
         fig.add_trace(go.Bar(name='EMC Checked', x=['EMC'], y=[emc_counts.get('Checked', 0)], marker_color='lightgreen'))
         #fig.add_trace(go.Bar(name='EMC Unchecked', x=['EMC'], y=[emc_counts.get('Unchecked', 0)], marker_color='tomato'))
-        col1 = st.columns(1)
-        with col1:
+        
             # Layout
-            fig.update_layout(
+        fig.update_layout(
                 title="Validation Summary",
                 barmode='group',
                 xaxis_title="Category",
@@ -116,7 +115,7 @@ class ValidationTracker:
             )
 
             # Display in Streamlit
-            st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True)
 
 
     def replace_placeholders(template_path, context, output_path):
