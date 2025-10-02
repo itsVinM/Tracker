@@ -39,24 +39,17 @@ class ValidationTracker:
             data['Homologated'] = ""
 
         
+      
         data['Progress'] = data.apply(
-            lambda row: (pd.Timestamp.now() - row["Day"]).days if pd.notnull(row["Day"]) else 0,
+            lambda row: (
+                f"Completed in {(pd.Timestamp.now() - row['Day']).days} days"
+                if pd.notnull(row["Day"]) and row["Homologation"] in ["Passed", "Failed"]
+                else (pd.Timestamp.now() - row["Day"]).days if pd.notnull(row["Day"])
+                else 0
+            ),
             axis=1
         )
-
-        # Add color and label based on status
-        data['ProgressColor'] = data['Homologated'].apply(
-            lambda x: 'green' if x in ['Passed', 'Failed'] else 'steelblue'
-        )
-
-        data['ProgressLabel'] = data['Homologated'].apply(
-            lambda x: 'Ended' if x in ['Passed', 'Failed'] else 'In Progress'
-        )
-
-
-        data['Progress'] = data['Progress'].astype(int)
-        return data
-
+        
     def get_column_config(self) -> Dict[str, st.column_config.Column]:
         return {
             "Datasheet": st.column_config.CheckboxColumn("Datasheet", default=False),
