@@ -99,28 +99,36 @@ class ValidationTracker:
         with col1:     
             st.plotly_chart(fig_homologation, use_container_width=True)
 
+        
         with col2:
-            
             # Optional: Define your test columns
-            test_columns = ["Datasheet", "Function", "EMC"]  
+            test_columns = ["Datasheet", "Function", "EMC"]
 
             # Create binary coverage matrix (1 = Checked, 0 = Unchecked)
             coverage_matrix = df[test_columns].fillna(False).astype(int)
-            coverage_matrix.index = df["New"] if "New" in df.columns else df.index
+
+            # Combine product name with sample ID (or use any other column)
+            if "New" in df.columns and "Product" in df.columns:
+                coverage_matrix.index = df["New"].astype(str) + " | " + df["Product"].astype(str)
+            elif "New" in df.columns:
+                coverage_matrix.index = df["New"].astype(str)
+            else:
+                coverage_matrix.index = df.index.astype(str)
 
             # Generate heatmap
             fig_coverage = px.imshow(
                 coverage_matrix,
-                labels=dict(x="Test Type", y="Sample ID", color="Coverage"),
+                labels=dict(x="Test Type", y="Sample | Product", color="Coverage"),
                 x=coverage_matrix.columns,
                 y=coverage_matrix.index,
-                color_continuous_scale="Greens",
+                color_continuous_scale="greens",  # ✅ valid colorscale
                 text_auto=True,
                 title="Test Coverage Matrix Heatmap"
             )
 
             # Display heatmap
             st.plotly_chart(fig_coverage, use_container_width=True)
+
 
         with col3:
             # Summary metrics
