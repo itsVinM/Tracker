@@ -119,25 +119,36 @@ class TodoManager:
 
             # Define color mapping
             priority_colors = {
-                "High": "#f44336",   # Red
-                "Medium": "#ffeb3b", # Yellow
-                "Low": "#4caf50"     # Green
+                "High": "#af291f",   # Red
+                "Medium": "#ad9f19", # Yellow
+                "Low": "#2b6a2d"     # Green
             }
 
-            for date in sorted(df["due_date"].dropna().unique()):
-                day_tasks = df[df["due_date"] == date]
-                for _, row in day_tasks.iterrows():
-                    color = priority_colors.get(row["priority"], "#ffffff")
-                    st.markdown(
-                        f"""
-                        <div style="background-color:{color}; padding:4px; border-radius:6px; margin-bottom:6px; font-size:14px; width:400;">
-                            <strong>{row['priority']} Priority</strong><br>
-                            📝 {row['task']}<br>
-                            📆 <em>{row['due_date'].strftime('%d %b %Y')}</em>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
+            # Create flex container
+            st.markdown("""
+            <div style="display: flex; justify-content: space-between; gap: 10px;">
+            """, unsafe_allow_html=True)
+
+            for priority in ["Low", "Medium", "High"]:
+                priority_tasks = df[df["priority"] == priority]
+                st.markdown(f"""
+                <div style="flex: 1;">
+                    <h4 style="text-align: center; color: {priority_colors[priority]};">{priority} Priority</h4>
+                """, unsafe_allow_html=True)
+
+                for _, row in priority_tasks.iterrows():
+                    st.markdown(f"""
+                    <div style="background-color:{priority_colors[priority]}; padding:6px; border-radius:6px; margin-bottom:6px; font-size:13px; color:white;">
+                        📝 <strong>{row['task']}</strong><br>
+                        📆 <em>{row['due_date'].strftime('%d %b %Y')}</em>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                st.markdown("</div>", unsafe_allow_html=True)
+
+            # Close flex container
+            st.markdown("</div>", unsafe_allow_html=True)
+
         else:
             st.info("No tasks scheduled.")
 
