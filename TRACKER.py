@@ -56,9 +56,9 @@ class ValidationTracker:
                 "Progress", min_value=0, max_value=40, format="%.0f days"
             ),
 
-            "Homologation": st.column_config.SelectboxColumn(
-                        "Homologation",
-                        options=["⏳ VALIDATION", "❌ FAILED", "✅ PASSED"])            
+            "Homologated": st.column_config.SelectboxColumn(
+                        "Homologated",
+                        options=["⏳ AWAITING", "🛠️ VALIDATION", "📡 EMC","❌ FAILED", "✅ PASSED"])            
         }
 
     def display_editor(self) -> pd.DataFrame:
