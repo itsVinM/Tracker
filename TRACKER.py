@@ -41,7 +41,7 @@ class ValidationTracker:
         data['Progress'] = data.apply(
             lambda row: (
                 f"COMPLETED" 
-                if pd.notnull(row["Day"]) and row["Homologated"] in ["PASSED", "Failed"]
+                if pd.notnull(row["Day"]) and row["Homologated"] in ["PASSED", "FAILED"]
                 else (pd.Timestamp.now() - row["Day"]).days if pd.notnull(row["Day"])
                 else 0
             ),
