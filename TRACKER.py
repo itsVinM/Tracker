@@ -95,28 +95,35 @@ class ValidationTracker:
         homologation_counts = df['Homologated'].fillna("Unknown").value_counts()
         fig_homologation = px.pie(names=homologation_counts.index, values=homologation_counts.values, title="Homologation Status")
 
-        col1, col2, col3 = st.columns(3)
+        col1, col2 = st.columns(2)
         with col1:     
             st.plotly_chart(fig_homologation, use_container_width=True)
 
         
         with col2:
-            # Optional: Define your test columns
-            test_columns = ["Datasheet", "Function", "EMC"]
+            # Summary metrics
+            st.markdown("### Summary Metrics")
+            st.write(f"Total Requests: {df['Request'].nunique() if 'Request' in df.columns else len(df)}")
+            st.write(f"Datasheet Checked: {datasheet_counts.get('Checked', 0)}")
+            st.write(f"Function Checked: {function_counts.get('Checked', 0)}")
+            st.write(f"EMC Checked: {emc_counts.get('Checked', 0)}")
 
-            # Create binary coverage matrix (1 = Checked, 0 = Unchecked)
-            coverage_matrix = df[test_columns].fillna(False).astype(int)
+        # Optional: Define your test columns
+        test_columns = ["Datasheet", "Function", "EMC"]
 
-            # Combine product name with sample ID (or use any other column)
-            if "New" in df.columns and "Product" in df.columns:
+        # Create binary coverage matrix (1 = Checked, 0 = Unchecked)
+        coverage_matrix = df[test_columns].fillna(False).astype(int)
+
+        # Combine product name with sample ID (or use any other column)
+        if "New" in df.columns and "Product" in df.columns:
                 coverage_matrix.index = df["Product"].astype(str)+ " => " + df["New"].astype(str) 
-            elif "New" in df.columns:
+        elif "New" in df.columns:
                 coverage_matrix.index = df["New"].astype(str)
-            else:
+        else:
                 coverage_matrix.index = df.index.astype(str)
 
-            # Generate heatmap
-            fig_coverage = px.imshow(
+        # Generate heatmap
+        fig_coverage = px.imshow(
                 coverage_matrix,
                 labels=dict(x="Test Type", y="Sample | Product", color="Coverage"),
                 x=coverage_matrix.columns,
@@ -127,8 +134,8 @@ class ValidationTracker:
             )
 
             
-            # Update layout to increase chart size
-            fig_coverage.update_layout(
+        # Update layout to increase chart size
+        fig_coverage.update_layout(
                     autosize=True,
                     width=900,
                     height=600,
@@ -136,19 +143,8 @@ class ValidationTracker:
                 )
 
 
-            # Display heatmap
-            st.plotly_chart(fig_coverage, use_container_width=True)
-
-
-        with col3:
-            # Summary metrics
-            st.markdown("### Summary Metrics")
-            st.write(f"Total Requests: {df['Request'].nunique() if 'Request' in df.columns else len(df)}")
-            st.write(f"Datasheet Checked: {datasheet_counts.get('Checked', 0)}")
-            st.write(f"Function Checked: {function_counts.get('Checked', 0)}")
-            st.write(f"EMC Checked: {emc_counts.get('Checked', 0)}")
-
-
+        # Display heatmap
+        st.plotly_chart(fig_coverage, use_container_width=True)
 
     def replace_placeholders(template_path, context, output_path):
         # Load the template document
