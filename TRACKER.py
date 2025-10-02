@@ -117,10 +117,10 @@ class ValidationTracker:
 
 def project_tracker():
     with st.sidebar:
-        st.markdown("📊 Validation tracker used for its simplicity" \
-        " *possibility to add automatic report generator" \
-        " *possibility to add gannt chart and to structure it more for project managers" \
-        "")
+        st.markdown("📊 Validation tracker used for its simplicity" )
+        st.markdown("* possibility to add automatic report generator")
+        st.markdown("possibility to add gannt chart and to structure it more for project managers")
+        
         uploaded_file = st.file_uploader("Choose an Excel file", type="xlsx")
         if uploaded_file:
             fill_database(uploaded_file)
