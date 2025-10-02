@@ -292,7 +292,7 @@ class TodoManager:
                 else:
                     st.warning("Please enter a valid task.")
 
-    
+
 
 
 # --- Main App ---
@@ -306,7 +306,7 @@ def project_tracker():
             fill_database(uploaded_file)
             st.success("Database has been populated successfully.")
 
-    tab1, tab2 = st.tabs(["📊 Validation request", "📥Todo!"])
+    tab1, tab2, tab3 = st.tabs(["📊 Validation request", "📥Todo!", "💼CLI"])
 
     with tab1:
         tracker = ValidationTracker()
