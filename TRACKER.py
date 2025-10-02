@@ -42,7 +42,7 @@ class ValidationTracker:
         data['Progress'] = data.apply(
             lambda row: (
                 (pd.Timestamp.now() - row["Day"]).days 
-                if pd.notnull(row["Day"]) and row["Homologated"] not in ["PASSED", "FAILED"]
+                if pd.notnull(row["Day"]) and row["Homologated"] not in ["✅ PASSED", "❌ FAILED"]
                 else 0
             ),
             axis=1
