@@ -108,43 +108,6 @@ class ValidationTracker:
             st.write(f"Function Checked: {function_counts.get('Checked', 0)}")
             st.write(f"EMC Checked: {emc_counts.get('Checked', 0)}")
 
-        # Optional: Define your test columns
-        test_columns = ["Datasheet", "Function", "EMC"]
-
-        # Create binary coverage matrix (1 = Checked, 0 = Unchecked)
-        coverage_matrix = df[test_columns].fillna(False).astype(int)
-
-        # Combine product name with sample ID (or use any other column)
-        if "New" in df.columns and "Product" in df.columns:
-                coverage_matrix.index = df["Request"] + " => " +df["Product"].astype(str)+ " => " + df["New"].astype(str) 
-        elif "New" in df.columns:
-                coverage_matrix.index = df["New"].astype(str)
-        else:
-                coverage_matrix.index = df.index.astype(str)
-
-        # Generate heatmap
-        fig_coverage = px.imshow(
-                coverage_matrix,
-                labels=dict(x="Test Type", y="Sample | Product", color="Coverage"),
-                x=coverage_matrix.columns,
-                y=coverage_matrix.index,
-                color_continuous_scale="greens",  # ✅ valid colorscale
-                text_auto=True,
-                title="Test Coverage Matrix Heatmap"
-            )
-
-            
-        # Update layout to increase chart size
-        fig_coverage.update_layout(
-                    autosize=True,
-                    width=900,
-                    height=600,
-                    margin=dict(l=40, r=40, t=60, b=40)
-                )
-
-
-        # Display heatmap
-        st.plotly_chart(fig_coverage, use_container_width=True)
 
     def replace_placeholders(template_path, context, output_path):
         # Load the template document
