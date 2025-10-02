@@ -38,18 +38,19 @@ class ValidationTracker:
         if 'Homologated' not in data.columns:
             data['Homologated'] = ""
 
-        
-      
         data['Progress'] = data.apply(
             lambda row: (
                 f"Completed in {(pd.Timestamp.now() - row['Day']).days} days"
-                if pd.notnull(row["Day"]) and row["Homologated"] in ["Passed", "Failed"]
+                if pd.notnull(row["Day"]) and row["Homologation"] in ["Passed", "Failed"]
                 else (pd.Timestamp.now() - row["Day"]).days if pd.notnull(row["Day"])
                 else 0
             ),
             axis=1
         )
         
+        data['Progress'] = data['Progress'].astype(int)
+        return data
+
     def get_column_config(self) -> Dict[str, st.column_config.Column]:
         return {
             "Datasheet": st.column_config.CheckboxColumn("Datasheet", default=False),
