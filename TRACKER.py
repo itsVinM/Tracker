@@ -202,7 +202,6 @@ def project_tracker():
     
     with tab2:
         todo = TodoManager()
-        todo.show_urgent_popup()
         todo.display_calendar()
         todo.add_task()
 
