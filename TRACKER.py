@@ -90,8 +90,6 @@ class ValidationTracker:
         datasheet_counts = df['Datasheet'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
         function_counts = df['Function'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
         emc_counts = df['EMC'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
-        total_requests = df['Request'].nunique() if 'Request' in df.columns else len(df)
-
 
         # Create grouped bar chart
         fig = go.Figure()
@@ -105,22 +103,20 @@ class ValidationTracker:
 
         fig.add_trace(go.Bar(name='EMC Checked', x=['EMC'], y=[emc_counts.get('Checked', 0)], marker_color='lightgreen'))
         #fig.add_trace(go.Bar(name='EMC Unchecked', x=['EMC'], y=[emc_counts.get('Unchecked', 0)], marker_color='tomato'))
+        col1 = st.columns(1)
+        with col1:
+            # Layout
+            fig.update_layout(
+                title="Validation Summary",
+                barmode='group',
+                xaxis_title="Category",
+                yaxis=dict(title='Validation Counts'),
+                width=800,
+                height=600
+            )
 
-        fig.add_trace(go.Bar(name='Total Requests', x=['Total Requests'], y=[total_requests], marker_color='grey'))
-
-        
-        # Layout
-        fig.update_layout(
-            title="Validation Summary",
-            barmode='group',
-            xaxis_title="Category",
-            yaxis=dict(title='Validation Counts'),
-            width=800,
-            height=600
-        )
-
-        # Display in Streamlit
-        st.plotly_chart(fig, use_container_width=True)
+            # Display in Streamlit
+            st.plotly_chart(fig, use_container_width=True)
 
 
     def replace_placeholders(template_path, context, output_path):
