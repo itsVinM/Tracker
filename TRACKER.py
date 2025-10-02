@@ -79,13 +79,22 @@ class ValidationTracker:
             file_name=f"Backup_Project_Tracker_{today}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
+    
+with st.sidebar:
+    st.markdown("Validation tracker by Vincentiu")
+    uploaded_file = st.file_uploader("Choose an Excel file", type="xlsx")
+    debug_mode = st.checkbox("🔧 Developer Mode", value=False)
+    if uploaded_file:
+        fill_database(uploaded_file)
+        st.success("Database has been populated successfully.")
+
 
 # --- To-Do Manager Class ---
 class TodoManager:
     TODO_FILE = "todo_list.json"
     PRIORITY_LEVELS = ["High", "Medium", "Low"]
 
-    def load_todo(self) -> List[Dict[str, Literal["High", "Medium", "Low"]]]:
+    def load_todo(self) -> List[Dict[str, str]]:
         if os.path.exists(self.TODO_FILE):
             with open(self.TODO_FILE, "r") as f:
                 todos = json.load(f)
@@ -93,10 +102,15 @@ class TodoManager:
                 for item in todos:
                     task = str(item.get("task", "")).strip()
                     priority = item.get("priority", "Medium")
+                    due_date = item.get("due_date", "")
                     if priority not in self.PRIORITY_LEVELS:
                         priority = "Medium"
                     if task:
-                        valid_todos.append({"task": task, "priority": priority})
+                        valid_todos.append({
+                            "task": task,
+                            "priority": priority,
+                            "due_date": due_date
+                        })
                 return valid_todos
         return []
 
@@ -104,44 +118,77 @@ class TodoManager:
         with open(self.TODO_FILE, "w") as f:
             json.dump(todos, f, indent=2)
 
-    def display_todo(self):
-        st.text("📝 To-Do List")
+    def display_calendar(self):
+        st.subheader("📅 Calendar View of Tasks")
         todos = self.load_todo()
         if todos:
-            updated_todos = []
-            for i, item in enumerate(todos):
-                col1, col2, col3 = st.columns([0.05, 0.75, 0.2])
-                done = col1.checkbox("", key=f"todo_{i}")
-                if not done:
-                    updated_todos.append(item)
-                    col2.markdown(f"{i+1}. {item['task']}")
-                    col3.markdown(f"🔺 {item['priority']}")
-                else:
-                    col2.markdown(f"~~{i+1}. {item['task']}~~ ✅")
-                    col3.markdown(f"~~🔺 {item['priority']}~~")
-            if updated_todos != todos:
-                self.save_todo(updated_todos)
+            df = pd.DataFrame(todos)
+            df["due_date"] = pd.to_datetime(df["due_date"], errors="coerce")
+            df = df.sort_values("due_date")
+            for date in sorted(df["due_date"].dropna().unique()):
+                st.markdown(f"### 📆 {date.strftime('%A, %d %B %Y')}")
+                day_tasks = df[df["due_date"] == date]
+                for _, row in day_tasks.iterrows():
+                    st.markdown(f"- 🔺 **{row['priority']}**: {row['task']}")
         else:
-            st.info("No tasks saved yet.")
+            st.info("No tasks scheduled.")
 
     def add_task(self):
-        st.text("➕ Add New To-Do Item")
+        st.subheader("➕ Add New To-Do Item")
         new_task = st.text_input("Enter a new task")
         priority = st.selectbox("Select priority", self.PRIORITY_LEVELS)
+        due_date = st.date_input("Select due date", value=datetime.today())
         if st.button("Save Task"):
             if new_task.strip():
                 todos = self.load_todo()
-                todos.append({"task": new_task.strip(), "priority": priority})
+                todos.append({
+                    "task": new_task.strip(),
+                    "priority": priority,
+                    "due_date": due_date.strftime("%Y-%m-%d")
+                })
                 self.save_todo(todos)
                 st.success("Task saved successfully!")
             else:
                 st.warning("Please enter a valid task.")
 
+    def show_urgent_popup(self):
+        todos = self.load_todo()
+        if todos:
+            df = pd.DataFrame(todos)
+            df["due_date"] = pd.to_datetime(df["due_date"], errors="coerce")
+            df["priority_rank"] = df["priority"].map({"High": 1, "Medium": 2, "Low": 3})
+            df = df.sort_values(["priority_rank", "due_date"])
+            urgent = df.iloc[0]
+            
+            st.markdown(
+                f"""
+                <div style="
+                    position: fixed;
+                    top: 10px;
+                    right: 10px;
+                    background-color: #f44336;
+                    color: white;
+                    padding: 10px 20px;
+                    border-radius: 10px;
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                    z-index: 1000;
+                ">
+                    🔔 <strong>Urgent Task:</strong> {urgent['task']}<br>
+                    ⏰ Due: {urgent['due_date'].strftime('%d %b %Y') if pd.notnull(urgent['due_date']) else 'No due date'}<br>
+                    🔺 Priority: {urgent['priority']}
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+
 # --- Main App ---
 def project_tracker():
+    
     with st.sidebar:
         st.markdown("Validation tracker by Vincentiu")
         uploaded_file = st.file_uploader("Choose an Excel file", type="xlsx")
+        debug_mode = st.checkbox("🔧 Developer Mode", value=False)
         if uploaded_file:
             fill_database(uploaded_file)
             st.success("Database has been populated successfully.")
@@ -150,7 +197,7 @@ def project_tracker():
 
     with tab1:
         tracker = ValidationTracker()
-        but1, but2, _, _ = st.columns(4, gap="small")
+        but1, but2, but3, but4 = st.columns(4, gap="small")
         edited_data = tracker.display_editor()
 
         with but1:
@@ -160,9 +207,23 @@ def project_tracker():
         with but2:
             tracker.download_backup(edited_data)
 
+        
+        if debug_mode:
+                with but3:
+                    if st.button("📥 High volume reports"):
+                        tracker.generate_reports(edited_data)
+
+                with but4:
+                    if st.button("💼 Single report"):
+                        st.info("Single report generation logic goes here.")
+
+
+    
     with tab2:
         todo = TodoManager()
-        todo.display_todo()
+        todo.show_urgent_popup()
+        todo.display_calendar()
         todo.add_task()
+
 
 project_tracker()
