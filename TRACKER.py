@@ -326,7 +326,7 @@ def project_tracker():
     with tab1:
         tracker = ValidationTracker()
         but1, but2, but3, but4 = st.columns(4, gap="small")
-        st.success("MOS, Diodes and all resonant components need EMC & Functionality test")
+        st.text("MOS, Diodes and all resonant components need EMC & Functionality test")
         edited_data = tracker.display_editor()
         tracker.display_charts()
         with but1:
