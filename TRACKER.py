@@ -113,53 +113,7 @@ class ValidationTracker:
 
             # Display in Streamlit
         st.plotly_chart(fig, use_container_width=True)
-
-
-    def generate_pdf_report(report_df):
-        # Create an in-memory buffer to hold the PDF
-        buffer = BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=letter)
-        story = []
-        styles = getSampleStyleSheet()
-
-        # Add a title and header information
-        story.append(Paragraph("Validation Summary Report", styles['Title']))
-        story.append(Spacer(1, 12))
-        story.append(Paragraph(f"Report Date: {datetime.today().strftime('%B %d, %Y')}", styles['Normal']))
-        story.append(Spacer(1, 24))
-        
-        # Add a summary of the data
-        num_components = len(report_df)
-        passed_count = len(report_df[report_df['Status'] == 'PASSED'])
-        failed_count = len(report_df[report_df['Status'] == 'FAILED'])
-        
-        story.append(Paragraph(f"Summary: A total of {num_components} components were tracked.", styles['Normal']))
-        story.append(Paragraph(f"Passed: {passed_count} components.", styles['Normal']))
-        story.append(Paragraph(f"Failed: {failed_count} components.", styles['Normal']))
-        story.append(Spacer(1, 24))
-
-        # Add the main data table
-        data = [list(report_df.columns)] + report_df.values.tolist()
-        table_style = TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ('BOX', (0, 0), (-1, -1), 1, colors.black),
-        ])
-        table = Table(data, style=table_style)
-        story.append(table)
-        
-        # Build the PDF and prepare it for download
-        doc.build(story)
-        
-        return st.download_button(
-            label="📥 Download PDF Report",
-            data=buffer.getvalue(),
-            file_name=f"Validation_Report_{datetime.today().strftime('%Y%m%d')}.pdf",
-            mime="application/pdf"
-        )
-
     
-
 
 def project_tracker():
     with st.sidebar:
@@ -169,7 +123,7 @@ def project_tracker():
             fill_database(uploaded_file)
             st.success("Database has been populated successfully.")
 
-    tab1, tab2, tab3= st.tabs(["📊 Validation request", "📥Todo!", "📥Report"])
+    tab1, tab2= st.tabs(["📊 Validation request", "📥Todo!"])
 
     with tab1:
         tracker = ValidationTracker()
@@ -188,11 +142,5 @@ def project_tracker():
         with st.expander("Add task"):
             todo.add_task()
         todo.display_calendar()
-
-    with tab3:
-            # Button to generate and download the report
-            if st.button("Generate Report"):
-                # Pass the current DataFrame to the new function
-                ValidationTracker.generate_pdf_report(st.session_state['data'])
 
 project_tracker()
