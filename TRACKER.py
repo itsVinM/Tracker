@@ -112,43 +112,57 @@ class TodoManager:
 
     def display_calendar(self):
         todos = self.load_todo()
-        if todos:
-            df = pd.DataFrame(todos)
-            df["due_date"] = pd.to_datetime(df["due_date"], errors="coerce")
-            df = df.sort_values("due_date")
+        if not todos:
+            st.info("No tasks scheduled.")
+            return
 
-            # Define color mapping
-            priority_colors = {
-                "High": "#af291f",   # Red
-                "Medium": "#ad9f19", # Yellow
-                "Low": "#2b6a2d"     # Green
-            }
+        df = pd.DataFrame(todos)
+        df["due_date"] = pd.to_datetime(df["due_date"], errors="coerce")
+        df = df.sort_values("due_date")
 
-            # Create flex container
-            st.markdown("""
-            <div style="display: flex; justify-content: space-between; gap: 10px;">
-            """, unsafe_allow_html=True)
+        priority_colors = {
+            "High": "#af291f",   # Red
+            "Medium": "#ad9f19", # Yellow
+            "Low": "#2b6a2d"     # Green
+        }
 
-            for priority in ["Low", "Medium", "High"]:
-                priority_tasks = df[df["priority"] == priority]
-                st.markdown(f"""
-                <div style="flex: 1;">
-                    <h4 style="text-align: center; color: {priority_colors[priority]};">{priority} Priority</h4>
-                """, unsafe_allow_html=True)
+        st.markdown("""
+        <div style="display: flex; justify-content: space-between; gap: 20px;">
+        """, unsafe_allow_html=True)
 
-                for _, row in priority_tasks.iterrows():
+        for priority in ["Low", "Medium", "High"]:
+            priority_tasks = df[df["priority"] == priority]
+            if priority_tasks.empty:
+                st.markdown("<p style='text-align:center;'>No tasks</p>", unsafe_allow_html=True)
+            else:
+                for i, row in priority_tasks.iterrows():
+                    due_date = row["due_date"]
+                    date_str = due_date.strftime('%d %b %Y') if pd.notnull(due_date) else "No due date"
+
+                    # Unique key for each task
+                    task_key = f"{row['task']}_{i}"
+
                     st.markdown(f"""
                     <div style="background-color:{priority_colors[priority]}; padding:6px; border-radius:6px; margin-bottom:6px; font-size:13px; color:white;">
+                        <strong>{row['priority']} Priority</strong><br>
                         📝 <strong>{row['task']}</strong><br>
-                        📆 <em>{row['due_date'].strftime('%d %b %Y')}</em>
-                    </div>
+                        📆 <em>{date_str}</em><br>
                     """, unsafe_allow_html=True)
 
-                st.markdown("</div>", unsafe_allow_html=True)
+                    if st.button(f"❌ Cancel", key=task_key):
+                        if st.confirm(f"Are you sure you want to cancel '{row['task']}'?"):
+                            todos.remove({
+                                "task": row["task"],
+                                "priority": row["priority"],
+                                "due_date": row["due_date"].strftime("%Y-%m-%d") if pd.notnull(row["due_date"]) else ""
+                            })
+                            self.save_todo(todos)
+                            st.success(f"Task '{row['task']}' cancelled.")
+                            st.experimental_rerun()
 
-            # Close flex container
+                    st.markdown("</div>", unsafe_allow_html=True)
+
             st.markdown("</div>", unsafe_allow_html=True)
-
         else:
             st.info("No tasks scheduled.")
 
