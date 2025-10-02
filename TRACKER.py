@@ -39,7 +39,7 @@ class ValidationTracker:
                 data[col] = data[col].astype(bool)
         if 'Homologated' not in data.columns:
             data['Homologated'] = ""
-
+        
         return data
 
     def get_column_config(self) -> Dict[str, st.column_config.Column]:
