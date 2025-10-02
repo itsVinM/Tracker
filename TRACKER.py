@@ -65,7 +65,7 @@ def project_tracker():
         "Progress": st.column_config.ProgressColumn(
             "Progress",
             min_value=0,
-            max_value=100,
+            max_value=40,
             format="%.0f days"
         ),
         "Homologated": st.column_config.TextColumn(
@@ -75,21 +75,6 @@ def project_tracker():
             required=False
         )
     }
-
-    # Apply conditional formatting manually (via styling hints)
-    def highlight_row(row):
-        color = ""
-        if row["Homologated"] == "Validation":
-            color = "#FFC107"  # amber
-        elif row["Homologated"] == "Failed":
-            color = "#8B0000"  # dark red
-        elif row["Homologated"] == "Passed":
-            color = "#006400"  # dark green
-        elif row["Homologated"] == "Datasheet":
-            color = "#FFFFFF"  # white
-        return [f"background-color: {color}; color: white;" if col == "Homologated" else "" for col in row.index]
-
-    styled_data = data.style.apply(highlight_row, axis=1)
 
     # Display editable table
     edited_data = st.data_editor(
@@ -117,24 +102,24 @@ def project_tracker():
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
-    with but3:
-        if st.button('📥 High volume reports'):
-            filtered_df = data[
-                ~data['REPORTS'].str.strip().str.upper().isin(['OK', 'NA'])
-            ]
-            for index, row in filtered_df.iterrows():
-                test_value = row['Test Choice']
-                dut_name = row['DUT SN']
-                if test_value and dut_name:
-                    template_path = load_template(test_value)
-                    if template_path:
-                        current_dir = os.path.dirname(os.path.abspath(__file__))
-                        report_dir = os.path.join(current_dir, "REPORTS")
-                        file_path_pdf = os.path.join(report_dir, f"Report_DCDC_{dut_name}_{test_value}.docx").strip()
-                        generate_report(filtered_df[filtered_df.index == index], template_path, file_path_pdf)
+    # with but3:
+    #     if st.button('📥 High volume reports'):
+    #         filtered_df = data[
+    #             ~data['REPORTS'].str.strip().str.upper().isin(['OK', 'NA'])
+    #         ]
+    #         for index, row in filtered_df.iterrows():
+    #             test_value = row['Test Choice']
+    #             dut_name = row['DUT SN']
+    #             if test_value and dut_name:
+    #                 template_path = load_template(test_value)
+    #                 if template_path:
+    #                     current_dir = os.path.dirname(os.path.abspath(__file__))
+    #                     report_dir = os.path.join(current_dir, "REPORTS")
+    #                     file_path_pdf = os.path.join(report_dir, f"Report_DCDC_{dut_name}_{test_value}.docx").strip()
+    #                     generate_report(filtered_df[filtered_df.index == index], template_path, file_path_pdf)
 
-    with but4:
-        if st.button('💼 Single report'):
-            pass
+    # with but4:
+    #     if st.button('💼 Single report'):
+    #         pass
 
 project_tracker()
