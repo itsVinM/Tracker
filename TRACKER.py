@@ -37,12 +37,23 @@ class ValidationTracker:
                 data[col] = data[col].astype(bool)
         if 'Homologated' not in data.columns:
             data['Homologated'] = ""
-            
+
+        
         data['Progress'] = data.apply(
-            lambda row: 0 if row["Homologated"] in ["Passed", "Failed"]
-            else (pd.Timestamp.now() - row["Day"]).days if pd.notnull(row["Day"]) else 0,
+            lambda row: (pd.Timestamp.now() - row["Day"]).days if pd.notnull(row["Day"]) else 0,
             axis=1
         )
+
+        # Add color and label based on status
+        data['ProgressColor'] = data['Homologated'].apply(
+            lambda x: 'green' if x in ['Passed', 'Failed'] else 'steelblue'
+        )
+
+        data['ProgressLabel'] = data['Homologated'].apply(
+            lambda x: 'Ended' if x in ['Passed', 'Failed'] else 'In Progress'
+        )
+
+
         data['Progress'] = data['Progress'].astype(int)
         return data
 
