@@ -105,7 +105,7 @@ class TodoManager:
             json.dump(todos, f, indent=2)
 
     def display_todo(self):
-        st.subheader("📝 To-Do List")
+        st.text("📝 To-Do List")
         todos = self.load_todo()
         if todos:
             updated_todos = []
@@ -125,7 +125,7 @@ class TodoManager:
             st.info("No tasks saved yet.")
 
     def add_task(self):
-        st.subheader("➕ Add New To-Do Item")
+        st.text("➕ Add New To-Do Item")
         new_task = st.text_input("Enter a new task")
         priority = st.selectbox("Select priority", self.PRIORITY_LEVELS)
         if st.button("Save Task"):
