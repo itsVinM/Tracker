@@ -15,6 +15,7 @@ import time
 
  
 from database import *  
+from todolist import *
 
 st.set_page_config(
     page_title="PRODUCT ENGINEERING - VALIDATION",
@@ -194,249 +195,6 @@ class ValidationTracker:
             return None
 
 
-# --- To-Do Manager Class ---
-class TodoManager:
-    TODO_FILE = "todo_list.json"
-    PRIORITY_LEVELS = ["High", "Medium", "Low"]
-
-    def load_todo(self) -> List[Dict[str, str]]:
-        if os.path.exists(self.TODO_FILE):
-            with open(self.TODO_FILE, "r") as f:
-                todos = json.load(f)
-                valid_todos = []
-                for item in todos:
-                    task = str(item.get("task", "")).strip()
-                    priority = item.get("priority", "Medium")
-                    due_date = item.get("due_date", "")
-                    if priority not in self.PRIORITY_LEVELS:
-                        priority = "Medium"
-                    if task:
-                        valid_todos.append({
-                            "task": task,
-                            "priority": priority,
-                            "due_date": due_date
-                        })
-                return valid_todos
-        return []
-
-    def save_todo(self, todos: List[Dict[str, str]]):
-        with open(self.TODO_FILE, "w") as f:
-            json.dump(todos, f, indent=2)
-
-    def display_calendar(self):
-        todos = self.load_todo()
-        if not todos:
-            st.info("No tasks scheduled.")
-            return
-
-        df = pd.DataFrame(todos)
-        df["due_date"] = pd.to_datetime(df["due_date"], errors="coerce")
-
-        # Sort by priority and due date
-        priority_order = {"High": 1, "Medium": 2, "Low": 3}
-        df["priority_rank"] = df["priority"].map(priority_order)
-        df = df.sort_values(["priority_rank", "due_date"])
-
-        priority_colors = {
-            "High": "#902018",   # Red
-            "Medium": "#93871c", # Yellow
-            "Low": "#2b6a2d"     # Green
-        }
-
-        # Create 3 columns for Low, Medium, High
-        col_low, col_medium, col_high = st.columns(3)
-
-        for priority, col in zip(["Low", "Medium", "High"], [col_low, col_medium, col_high]):
-            with col:
-                st.markdown(f"### {priority}")
-                priority_tasks = df[df["priority"] == priority]
-
-                if priority_tasks.empty:
-                    st.markdown("No tasks.")
-                else:
-                    for i, row in priority_tasks.iterrows():
-                        due_date = row["due_date"]
-                        date_str = due_date.strftime('%d %b %Y') if pd.notnull(due_date) else "No due date"
-                        task_key = f"{row['task']}_{i}"
-
-                        st.markdown(f"""
-                        <div style="background-color:{priority_colors[priority]}; padding:4px; border-radius:4px; margin-bottom:4px; font-size:12px; color:white;">
-                            📝 <strong>{row['task']}</strong><br>
-                            📆 <em>{date_str}</em>
-                        </div>
-                        """, unsafe_allow_html=True)
-
-                        with st.expander("❌ Cancel", expanded=False):
-                            confirm_key = f"confirm_{task_key}"
-                            if st.checkbox(f"Confirm cancel '{row['task']}'", key=confirm_key):
-                                todos.remove({
-                                    "task": row["task"],
-                                    "priority": row["priority"],
-                                    "due_date": row["due_date"].strftime("%Y-%m-%d") if pd.notnull(row["due_date"]) else ""
-                                })
-                                self.save_todo(todos)
-                                st.success(f"Task '{row['task']}' cancelled.")
-                                
-    
-    def add_task(self):
-            new_task = st.text_input("Enter a new task")
-            priority = st.selectbox("Select priority", self.PRIORITY_LEVELS)
-            due_date = st.date_input("Select due date", value=datetime.today())
-            if st.button("Save Task"):
-                if new_task.strip():
-                    todos = self.load_todo()
-                    todos.append({
-                        "task": new_task.strip(),
-                        "priority": priority,
-                        "due_date": due_date.strftime("%Y-%m-%d")
-                    })
-                    self.save_todo(todos)
-                    st.success("Task saved successfully!")
-                else:
-                    st.warning("Please enter a valid task.")
-
-class CommTool:
-    def __init__(self):
-        self.mode = None
-        self.serial_port = None
-        self.can_bus = None
-        self.log = [] 
-
-    def setup_rs232(self, port: str, baudrate: int):
-        self.mode = "rs232"
-        self.serial_port = serial.Serial(port, baudrate, timeout=1)
-
-    def setup_can(self, channel: str, bitrate: int):
-        self.mode = "can"
-        self.can_bus = can.interface.Bus(channel=channel, bustype='socketcan', bitrate=bitrate)
-
-    
-    def send(self, message: str, can_id: int = 0x123):
-        if self.mode == "rs232":
-            self.serial_port.write(message.encode())
-            log_entry = {"Direction": "TX", "Protocol": "RS232", "Message": message}
-            self.log.append(log_entry)
-            return f"Sent over RS232: {message}"
-
-        elif self.mode == "can":
-            data = bytes.fromhex(message)
-            msg = can.Message(arbitration_id=can_id, data=data, is_extended_id=False)
-            self.can_bus.send(msg)
-            log_entry = {"Direction": "TX", "Protocol": "CAN", "Message": f"ID={hex(can_id)} Data={message}"}
-            self.log.append(log_entry)
-            return f"Sent CAN message: ID={hex(can_id)}, Data={message}"
-
-    def read(self, timeout: int = 2):
-        if self.mode == "rs232":
-            self.serial_port.timeout = timeout
-            response = self.serial_port.readline().decode(errors="ignore").strip()
-            if response:
-                self.log.append({"Direction": "RX", "Protocol": "RS232", "Message": response})
-                return f"RS232 received: {response}"
-            return "No RS232 response."
-
-        elif self.mode == "can":
-            msg = self.can_bus.recv(timeout)
-            if msg:
-                msg_str = f"ID={hex(msg.arbitration_id)} Data={msg.data.hex()}"
-                self.log.append({"Direction": "RX", "Protocol": "CAN", "Message": msg_str})
-                return f"CAN received: {msg_str}"
-            return "No CAN message received."
-
-    def monitor(self, duration: int = 10, filter_ids=None):
-        messages = []
-        start_time = time.time()
-
-        if self.mode == "rs232":
-            while time.time() - start_time < duration:
-                line = self.serial_port.readline().decode(errors="ignore").strip()
-                if line:
-                    entry = {"Direction": "RX", "Protocol": "RS232", "Message": line}
-                    self.log.append(entry)
-                    messages.append(f"[RS232] {line}")
-
-        elif self.mode == "can":
-            while time.time() - start_time < duration:
-                msg = self.can_bus.recv(timeout=1)
-                if msg:
-                    if filter_ids is None or msg.arbitration_id in filter_ids:
-                        msg_str = f"ID={hex(msg.arbitration_id)} Data={msg.data.hex()}"
-                        entry = {"Direction": "RX", "Protocol": "CAN", "Message": msg_str}
-                        self.log.append(entry)
-                        messages.append(f"[CAN] {msg_str}")
-        return messages
-
-    def close(self):
-        if self.serial_port:
-            self.serial_port.close()
-        if self.can_bus:
-            self.can_bus.shutdown()
-    
-    def run_streamlit(self):
-        st.title("RS232 / CAN Communication Tool")
-
-        self.mode = st.selectbox("Select Interface Mode", ["RS232", "CAN"])
-        message = st.text_input("Message to Send")
-
-        if self.mode == "rs232":
-            port = st.text_input("Serial Port (e.g., COM3 or /dev/ttyUSB0)")
-            baudrate = st.number_input("Baudrate", value=9600, step=100)
-            read_response = st.checkbox("Read response after sending")
-            monitor = st.checkbox("Monitor RS232 for 10 seconds")
-
-            if st.button("Send"):
-                try:
-                    self.setup_rs232(port, baudrate)
-                    st.success(self.send(message))
-
-                    if read_response:
-                        st.info(self.read())
-
-                    if monitor:
-                        logs = self.monitor(duration=10)
-                        st.text_area("RS232 Monitor Log", "\n".join(logs), height=200)
-
-                    self.close()
-                except Exception as e:
-                    st.error(str(e))
-
-        elif self.mode == "can":
-            channel = st.text_input("CAN Channel (e.g., can0)")
-            bitrate = st.number_input("Bitrate", value=500000, step=10000)
-            can_id = st.number_input("CAN ID (hex)", value=0x123, format="0x%X")
-            read_response = st.checkbox("Read CAN message after sending")
-            monitor = st.checkbox("Monitor CAN for 10 seconds")
-            filter_ids_input = st.text_input("Filter CAN IDs (comma-separated hex, e.g., 0x123,0x456)")
-
-            if st.button("Send"):
-                try:
-                    self.setup_can(channel, bitrate)
-                    st.success(self.send(message, can_id=can_id))
-
-                    if read_response:
-                        st.info(self.read())
-
-                    if monitor:
-                        filter_ids = None
-                        if filter_ids_input:
-                            try:
-                                filter_ids = [int(x.strip(), 16) for x in filter_ids_input.split(",")]
-                            except ValueError:
-                                st.warning("Invalid CAN ID filter format.")
-                        logs = self.monitor(duration=10, filter_ids=filter_ids)
-                        st.text_area("CAN Monitor Log", "\n".join(logs), height=200)
-
-                    self.close()
-                except Exception as e:
-                    st.error(str(e))
-        if self.log:
-            st.markdown("### 📋 Message Log")
-            st.dataframe(self.log, use_container_width=True)
-
-
-    
-
-
 def project_tracker():
     with st.sidebar:
         st.markdown("📊 Validation tracker by Vincentiu")
@@ -446,7 +204,7 @@ def project_tracker():
             fill_database(uploaded_file)
             st.success("Database has been populated successfully.")
 
-    tab1, tab2, tab3 = st.tabs(["📊 Validation request", "📥Todo!", "💼CLI"])
+    tab1, tab2 = st.tabs(["📊 Validation request", "📥Todo!"])
 
     with tab1:
         tracker = ValidationTracker()
@@ -473,9 +231,5 @@ def project_tracker():
             todo.add_task()
         todo.display_calendar()
 
-    with tab3:
-        st.subheader("💼 RS232 / CAN Command Interface")
-        comm = CommTool()
-        comm.run_streamlit()
 
 project_tracker()
