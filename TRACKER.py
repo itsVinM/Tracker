@@ -99,7 +99,7 @@ class ValidationTracker:
         fig = go.Figure()
 
         # Validation metrics (left axis)
-        fig.add_trace(go.Bar(name='Datasheet Checked', x=['Datasheet'], y=[datasheet_counts.get('Checked', 0)], marker_color='lightgreenn'))
+        fig.add_trace(go.Bar(name='Datasheet Checked', x=['Datasheet'], y=[datasheet_counts.get('Checked', 0)], marker_color='lightgreen'))
         fig.add_trace(go.Bar(name='Datasheet Unchecked', x=['Datasheet'], y=[datasheet_counts.get('Unchecked', 0)], marker_color='salmon'))
 
         fig.add_trace(go.Bar(name='Function Checked', x=['Function'], y=[function_counts.get('Checked', 0)], marker_color='palegreen'))
@@ -111,8 +111,8 @@ class ValidationTracker:
         fig.add_trace(go.Bar(name='Total Requests', x=['Total Requests'], y=[total_requests], marker_color='grey'))
 
         # Homologation status (right axis)
-        fig.add_trace(go.Bar(name='Approved', x2=['Approved'], y=[homologation_counts.get('Approved', 0)], marker_color='green', yaxis='y2'))
-        fig.add_trace(go.Bar(name='Rejected', x2=['Rejected'], y=[homologation_counts.get('Rejected', 0)], marker_color='red', yaxis='y2'))
+        fig.add_trace(go.Bar(name='Approved', x=['Approved'], y=[homologation_counts.get('Approved', 0)], marker_color='green', yaxis='y2'))
+        fig.add_trace(go.Bar(name='Rejected', x=['Rejected'], y=[homologation_counts.get('Rejected', 0)], marker_color='red', yaxis='y2'))
 
         # Layout
         fig.update_layout(
