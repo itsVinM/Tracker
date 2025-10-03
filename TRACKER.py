@@ -126,7 +126,7 @@ def project_tracker():
             fill_database(uploaded_file)
             st.success("Database has been populated successfully.")
 
-    tab1, tab2= st.tabs(["📊 Validation request", "📥Todo!"])
+    tab1, tab2= st.tabs(["📊 Validation request", "📥Todo!" ])
 
     with tab1:
         tracker = ValidationTracker()
@@ -145,5 +145,6 @@ def project_tracker():
         with st.expander("Add task"):
             todo.add_task()
         todo.display_calendar()
+
 
 project_tracker()

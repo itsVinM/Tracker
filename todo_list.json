@@ -10,11 +10,6 @@
     "due_date": "2025-12-01"
   },
   {
-    "task": "Homologation Inductor 2025-160",
-    "priority": "Medium",
-    "due_date": "2025-10-10"
-  },
-  {
     "task": "Converter Simulation",
     "priority": "Low",
     "due_date": "2026-01-31"
@@ -28,5 +23,10 @@
     "task": "Order products ODX-600, ODX-1300",
     "priority": "High",
     "due_date": "2025-10-10"
+  },
+  {
+    "task": "Homologation Inductor 2025-160",
+    "priority": "Low",
+    "due_date": "2025-10-17"
   }
 ]
