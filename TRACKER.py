@@ -1,24 +1,16 @@
-import os, re, shutil, json, sqlite3, plotly
 import pandas as pd
 import streamlit as st
 from io import BytesIO
 from datetime import datetime
-from sqlalchemy import create_engine
-from typing import List, Dict
-import plotly.figure_factory as ff
 import plotly.graph_objects as go
-import plotly.express as px
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib import colors
 
-import serial, can
-import time
-
- 
-from database import *  
-from todolist import *
+from database import (
+    initialize_database,
+    get_data_from_db,
+    fill_database_from_excel,
+    update_homologation_status
+)
+from todolist import TodoManager
 
 st.set_page_config(
     page_title="PRODUCT ENGINEERING - VALIDATION",
@@ -28,31 +20,43 @@ st.set_page_config(
 # --- Validation Tracker Class ---
 class ValidationTracker:
     def __init__(self):
-        database()
-        self.query = "SELECT * FROM ProjectTracker"
+        initialize_database()
+        self.query = """
+            SELECT 
+                o.request_code,
+                hs.product_id,
+                hs.homologated,
+                hs.datasheet,
+                hs.function_test,
+                hs.emc_test,
+                hs.note,
+                hs.current,
+                hs.used,
+                hs.position,
+                hs.new
+            FROM OrderList o
+            JOIN ProductsList p ON o.reference_id = p.reference_id
+            JOIN HomologationStatus hs ON p.product_id = hs.product_id
+        """
         self.data = self.load_data()
         self.column_config = self.get_column_config()
 
     def load_data(self) -> pd.DataFrame:
-        data = get_data_from_db(self.query)
+        df = get_data_from_db(self.query)
+        for col in ['datasheet', 'function_test', 'emc_test']:
+            if col in df.columns:
+                df[col] = df[col].astype(bool)
+        return df
 
-        # Enforce data types
-        for col in ['Datasheet', 'Function', 'EMC']:
-            if col in data.columns:
-                data[col] = data[col].astype(bool)
-        if 'Homologated' not in data.columns:
-            data['Homologated'] = ""
-        
-        return data
-
-    def get_column_config(self) -> Dict[str, st.column_config.Column]:
+    def get_column_config(self) -> dict:
         return {
-            "Datasheet": st.column_config.CheckboxColumn("Datasheet", default=False),
-            "Function": st.column_config.CheckboxColumn("Function", default=False),
-            "EMC": st.column_config.CheckboxColumn("EMC", default=False),
-            "Homologated": st.column_config.SelectboxColumn(
-                        "Homologated",
-                        options=["⏳AWAIT", "🛠️FUNCTION", "📡 EMC","❌ FAILED", "✅ PASSED"])            
+            "datasheet": st.column_config.CheckboxColumn("Datasheet", default=False),
+            "function_test": st.column_config.CheckboxColumn("Function", default=False),
+            "emc_test": st.column_config.CheckboxColumn("EMC", default=False),
+            "homologated": st.column_config.SelectboxColumn(
+                "Homologated",
+                options=["⏳AWAIT", "🛠️FUNCTION", "📡 EMC", "❌ FAILED", "✅ PASSED"]
+            )
         }
 
     def display_editor(self) -> pd.DataFrame:
@@ -64,9 +68,20 @@ class ValidationTracker:
         )
 
     def save_changes(self, edited_data: pd.DataFrame):
-        engine = create_engine('sqlite:///project_tracker.db')
-        edited_data.to_sql('ProjectTracker', con=engine, if_exists='replace', index=False)
-        st.success("Changes saved successfully.")
+        for _, row in edited_data.iterrows():
+            update_homologation_status(
+                product_id=row['product_id'],
+                homologated=row['homologated'],
+                datasheet=row['datasheet'],
+                function_test=row['function_test'],
+                emc_test=row['emc_test'],
+                note=row['note'],
+                current=row['current'],
+                used=row['used'],
+                position=row['position'],
+                new=row['new']
+            )
+        st.success("✅ Changes saved successfully.")
 
     def download_backup(self, edited_data: pd.DataFrame):
         backup = BytesIO()
@@ -83,68 +98,66 @@ class ValidationTracker:
     def display_charts(self):
         df = self.data
 
-        # Count Checked and Unchecked for each category
-        datasheet_counts = df['Datasheet'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
-        function_counts = df['Function'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
-        emc_counts = df['EMC'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
+        def count_checked(column):
+            return df[column].value_counts().rename({True: 'Checked', False: 'Unchecked'})
 
-        # Create grouped bar chart
+        datasheet_counts = count_checked('datasheet')
+        function_counts = count_checked('function_test')
+        emc_counts = count_checked('emc_test')
+
         fig = go.Figure()
 
-        # Validation metrics (left axis)
-        fig.add_trace(go.Bar(name='Datasheet Checked', x=['Datasheet'], y=[datasheet_counts.get('Checked', 0)], marker_color='lightgreen'))
-        fig.add_trace(go.Bar(name='Datasheet Unchecked', x=['Datasheet'], y=[datasheet_counts.get('Unchecked', 0)], marker_color='salmon'))
+        for category, counts in zip(
+            ['Datasheet', 'Function', 'EMC'],
+            [datasheet_counts, function_counts, emc_counts]
+        ):
+            fig.add_trace(go.Bar(name=f'{category} Checked', x=[category], y=[counts.get('Checked', 0)], marker_color='lightgreen'))
+            fig.add_trace(go.Bar(name=f'{category} Unchecked', x=[category], y=[counts.get('Unchecked', 0)], marker_color='salmon'))
 
-        fig.add_trace(go.Bar(name='Function Checked', x=['Function'], y=[function_counts.get('Checked', 0)], marker_color='lightgreen'))
-        fig.add_trace(go.Bar(name='Function Unchecked', x=['Function'], y=[function_counts.get('Unchecked', 0)], marker_color='salmon'))
-
-        fig.add_trace(go.Bar(name='EMC Checked', x=['EMC'], y=[emc_counts.get('Checked', 0)], marker_color='lightgreen'))
-        #fig.add_trace(go.Bar(name='EMC Unchecked', x=['EMC'], y=[emc_counts.get('Unchecked', 0)], marker_color='tomato'))
-        
-            # Layout
         fig.update_layout(
-                title="Validation Summary",
-                barmode='group',
-                xaxis_title="Category",
-                yaxis=dict(title='Validation Counts'),
-                width=800,
-                height=600
-            )
+            title="Validation Summary",
+            barmode='group',
+            xaxis_title="Category",
+            yaxis_title="Validation Counts",
+            width=800,
+            height=600
+        )
 
-            # Display in Streamlit
         st.plotly_chart(fig, use_container_width=True)
-    
 
+# --- Main App ---
 def project_tracker():
     with st.sidebar:
-        st.markdown("📊 Validation tracker used for its simplicity" )
-        st.markdown("* possibility to add automatic report generator")
-        st.markdown("* possibility to add gannt chart and to structure it more for project managers")
-        
-        uploaded_file = st.file_uploader("Choose an Excel file", type="xlsx")
-        if uploaded_file:
-            fill_database(uploaded_file)
-            st.success("Database has been populated successfully.")
+        st.markdown("📊 Validation tracker used for its simplicity")
+        st.markdown("* Possibility to add automatic report generator")
+        st.markdown("* Possibility to add Gantt chart and structure it more for project managers")
 
-    tab1, tab2= st.tabs(["📊 Validation request", "📥Todo!" ])
+        uploaded_file = st.file_uploader("📥 Upload Excel file", type="xlsx")
+        if uploaded_file:
+            fill_database_from_excel(uploaded_file)
+            st.success("📁 Database has been populated successfully.")
+
+    tab1, tab2 = st.tabs(["📊 Validation Request", "📥 Todo"])
 
     with tab1:
         tracker = ValidationTracker()
-        but1, but2 = st.columns(2, gap="small")
+        col1, col2 = st.columns(2, gap="small")
         st.text("MOS, Diodes and all resonant components need EMC & Functionality test")
         edited_data = tracker.display_editor()
         tracker.display_charts()
-        with but1:
+
+        with col1:
             if st.button("💾 Save Changes"):
                 tracker.save_changes(edited_data)
-        with but2:
+
+        with col2:
             tracker.download_backup(edited_data)
 
     with tab2:
         todo = TodoManager()
-        with st.expander("Add task"):
+        with st.expander("➕ Add Task"):
             todo.add_task()
         todo.display_calendar()
 
-
+# --- Run App ---
 project_tracker()
