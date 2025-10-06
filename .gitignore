@@ -1,6 +1,9 @@
-venv/
+# Python cache files
 __pycache__/
-*.pyc
-*.pyo
-.DS_Store
-.vscode/
+
+# Database file
+project_tracker.db
+
+# Standard Python virtual environment
+.venv
+venv/

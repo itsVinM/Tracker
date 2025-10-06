@@ -1,11 +1,15 @@
-import sqlite3
+import sqlite3, os
 import pandas as pd
 from sqlalchemy import create_engine, text
 from datetime import datetime
 import streamlit as st
 from typing import Dict
+from pathlib import Path
 
-DB_NAME = 'validation_tracker.db'
+
+HOME_DIR = os.path.expanduser('~')
+DOCUMENTS_DIR = Path(HOME_DIR) / 'Documents' / 'ProjectTrackerData' 
+DB_NAME = 'project_tracker.db'
 
 def database():
     """Ensures the SQLite DB and table exist."""
