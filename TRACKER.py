@@ -65,10 +65,10 @@ class ValidationTracker:
                 datasheet=row['datasheet'],
                 function_test=row['function_test'],
                 emc_test=row['emc_test'],
-                note=row['note'],
-                current=row['current'],
-                position=row['position'],
-                new=row['new']
+                note=row['Note'],
+                current=row['Current'],
+                position=row['Position'],
+                new=row['New']
             )
         st.success("✅ Changes saved successfully.")
 
