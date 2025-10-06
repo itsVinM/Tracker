@@ -23,11 +23,10 @@ class ValidationTracker:
         initialize_database()
         self.query = """
             SELECT po.reference_id, po.current, po.new,
-                hs.product_id, hs.homologated, hs.datasheet, hs.function_test,
-                hs.emc_test, hs.note, hs.position
+                   hs.product_id, hs.homologated, hs.datasheet, hs.function_test,
+                   hs.emc_test, hs.note, hs.position
             FROM ProductOrders po
             JOIN HomologationStatus hs ON po.product_id = hs.product_id
-
         """
         self.data = self.load_data()
         self.column_config = self.get_column_config()
@@ -50,42 +49,59 @@ class ValidationTracker:
             )
         }
 
+    def apply_filters(self) -> pd.DataFrame:
+        df = self.data.copy()
+
+        st.sidebar.markdown("### 🔍 Filters")
+
+        ref_filter = st.sidebar.selectbox("Reference ID", options=["All"] + sorted(df['reference_id'].unique()))
+        prod_filter = st.sidebar.selectbox("Product ID", options=["All"] + sorted(df['product_id'].unique()))
+        status_filter = st.sidebar.selectbox("Homologated", options=["All"] + sorted(df['homologated'].unique()))
+
+        if ref_filter != "All":
+            df = df[df['reference_id'] == ref_filter]
+        if prod_filter != "All":
+            df = df[df['product_id'] == prod_filter]
+        if status_filter != "All":
+            df = df[df['homologated'] == status_filter]
+
+        return df
+
     def display_editor(self) -> pd.DataFrame:
+        filtered_data = self.apply_filters()
         return st.data_editor(
-            self.data,
+            filtered_data,
             hide_index=True,
             num_rows="dynamic",
             column_config=self.column_config
         )
 
     def save_changes(self, edited_data: pd.DataFrame):
-        for _, row in edited_data.iterrows():
+        for _, row in self.data.iterrows():  # Save full dataset
             update_homologation_status(
                 product_id=row['product_id'],
-                homologated=row['Homologated'],
+                homologated=row['homologated'],
                 datasheet=row['datasheet'],
                 function_test=row['function_test'],
                 emc_test=row['emc_test'],
-                note=row['Note'],
-                current=row['Current'],
-                position=row['Position'],
-                new=row['New']
+                note=row['note'],
+                current=row['current'],
+                position=row['position'],
+                new=row['new']
             )
         st.success("✅ Changes saved successfully.")
 
     def download_backup(self, edited_data: pd.DataFrame):
-
         backup = BytesIO()
         with pd.ExcelWriter(backup) as writer:
-            edited_data.rename(columns={
-            'function_test': 'Function',
-            'emc_test':'EMC',
-            'datasheet': 'Datasheet',
-            'current': 'Current',
-            'new': 'New',
+            self.data.rename(columns={
+                'function_test': 'Function',
+                'emc_test': 'EMC',
+                'datasheet': 'Datasheet',
+                'current': 'Current',
+                'new': 'New',
             }, inplace=True)
-
-            edited_data.to_excel(writer, index=False)
+            self.data.to_excel(writer, index=False)
         today = datetime.today().strftime("%d%m%Y")
         st.download_button(
             label="🗂️ Download Backup",
