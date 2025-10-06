@@ -58,17 +58,19 @@ class ValidationTracker:
         )
 
     def save_changes(self, edited_data: pd.DataFrame):
+        
         for _, row in edited_data.iterrows():
             update_homologation_status(
+                reference_id=row['reference_id'],
                 product_id=row['product_id'],
-                homologated=row['homologated'],
+                homologated=row['Homologated'],
                 datasheet=row['datasheet'],
                 function_test=row['function_test'],
                 emc_test=row['emc_test'],
-                note=row['note'],
+                note=row['Note'],
                 current=row['current'],
-                position=row['position'],
-                new=row['new']
+                position=row['Position'],
+                new=row['New']
             )
         st.success("✅ Changes saved successfully.")
 
@@ -134,7 +136,7 @@ def project_tracker():
         st.text("MOS, Diodes and all resonant components need EMC & Functionality test")
         edited_data = tracker.display_editor()
         tracker.display_charts()
-
+        st.write("Columns in edited data:", edited_data.columns.tolist())
         with col1:
             if st.button("💾 Save Changes"):
                 tracker.save_changes(edited_data)
