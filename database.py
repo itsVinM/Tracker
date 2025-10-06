@@ -14,6 +14,7 @@ def initialize_database(db_path: str = DB_NAME) -> None:
             CREATE TABLE IF NOT EXISTS ProductOrders (
                 product_id TEXT PRIMARY KEY,
                 reference_id TEXT UNIQUE,
+                current TEXT,
                 new TEXT
             )
         """)
@@ -26,9 +27,7 @@ def initialize_database(db_path: str = DB_NAME) -> None:
                 function_test BOOLEAN,
                 emc_test BOOLEAN,
                 note TEXT,
-                current TEXT,
                 position TEXT,
-
                 FOREIGN KEY(product_id) REFERENCES ProductOrders(product_id)
             )
         """)
@@ -43,11 +42,11 @@ def fill_database_from_excel(file_path: str, db_path: str = DB_NAME) -> None:
         # Rename 'product' to 'product_id'
         df.rename(columns={'product': 'product_id'}, inplace=True)
 
-        df['reference_id'] = df['request_id']
+        
 
         product_orders_df = df[['product_id', 'reference_id']].copy()
 
-        homologation_df = df[['product_id', 'Homologated', 'Datasheet', 'Function', 'EMC', 'Note', 'Current', 'Position', 'New']].copy()
+        homologation_df = df[['product_id', 'Current', 'New', 'Position', 'Homologated', 'Datasheet', 'Function', 'EMC', 'Note' ]].copy()
         homologation_df.rename(columns={
             'Function': 'function_test',
             'EMC': 'emc_test',
@@ -67,26 +66,25 @@ def get_data_from_db(query: str, db_path: str = DB_NAME) -> pd.DataFrame:
 
 def update_homologation_status(
     product_id: str,
+    current: str,
+    new: str,
+    position: str,
     homologated: str,
     datasheet: bool,
     function_test: bool,
     emc_test: bool,
     note: str,
-    current: str,
-    position: str,
-    new: str,
+ 
     db_path: str = DB_NAME
 ) -> None:
     with sqlite3.connect(db_path) as conn:
         cursor = conn.cursor()
         cursor.execute("""
             UPDATE HomologationStatus
-            SET homologated = ?, datasheet = ?, function_test = ?, emc_test = ?, note = ?, 
-                current = ?, position = ?, new = ?
+            SET current = ?, new = ?, position = ?, homologated = ?, datasheet = ?, function_test = ?, emc_test = ?, note = ?, 
             WHERE product_id = ?
         """, (
-            homologated, datasheet, function_test, emc_test, note,
-            current, position, new,
+            current, new, position,homologated, datasheet, function_test, emc_test, note,
             product_id
         ))
         conn.commit()

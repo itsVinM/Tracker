@@ -57,8 +57,6 @@ class TodoManager:
             "Medium": "#f0ad4e", # Orange
             "Low": "#5cb85c"     # Green
         }
-
-        st.markdown("### 🗂️ Kanban Board")
         col_high, col_medium, col_low = st.columns(3)
 
         for priority, col in zip(["High", "Medium", "Low"], [col_high, col_medium, col_low]):
