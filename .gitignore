@@ -1,9 +1,6 @@
 # Python cache files
 __pycache__/
 
-# Database file
-project_tracker.db
-
 # Standard Python virtual environment
 .venv
 venv/
