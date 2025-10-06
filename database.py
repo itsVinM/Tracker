@@ -9,7 +9,7 @@ from pathlib import Path
 
 #HOME_DIR = os.path.expanduser('~')
 #DOCUMENTS_DIR = Path(HOME_DIR) / 'Documents' / 'ProjectTrackerData' 
-DB_NAME = 'validation_tracker.db'
+DB_NAME = 'project_tracker.db'
 
 def database():
     """Ensures the SQLite DB and table exist."""
