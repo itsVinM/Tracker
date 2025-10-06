@@ -49,34 +49,18 @@ class ValidationTracker:
             )
         }
 
-    def apply_filters(self) -> pd.DataFrame:
-        df = self.data.copy()
-
-        st.sidebar.markdown("### 🔍 Filters")
-
-        ref_filter = st.sidebar.selectbox("Reference ID", options=["All"] + sorted(df['reference_id'].unique()))
-        prod_filter = st.sidebar.selectbox("Product ID", options=["All"] + sorted(df['product_id'].unique()))
-
-        if ref_filter != "All":
-            df = df[df['reference_id'] == ref_filter]
-        if prod_filter != "All":
-            df = df[df['product_id'] == prod_filter]
-
-
-        return df
-
     def display_editor(self) -> pd.DataFrame:
-        filtered_data = self.apply_filters()
         return st.data_editor(
-            filtered_data,
+            self.data,
             hide_index=True,
             num_rows="dynamic",
             column_config=self.column_config
         )
 
     def save_changes(self, edited_data: pd.DataFrame):
-        for _, row in self.data.iterrows():  # Save full dataset
+        for _, row in self.data.iterrows():
             update_homologation_status(
+                reference_id=row['reference_id'],
                 product_id=row['product_id'],
                 homologated=row['homologated'],
                 datasheet=row['datasheet'],
@@ -165,8 +149,6 @@ def project_tracker():
 
         with col2:
             tracker.download_backup(edited_data)
-
-        
 
     with tab2:
         todo = TodoManager()
