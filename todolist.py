@@ -48,52 +48,47 @@ class TodoManager:
         df = pd.DataFrame(todos)
         df["due_date"] = pd.to_datetime(df["due_date"], errors="coerce")
 
-        # Sort by priority and due date
         priority_order = {"High": 1, "Medium": 2, "Low": 3}
         df["priority_rank"] = df["priority"].map(priority_order)
         df = df.sort_values(["priority_rank", "due_date"])
 
         priority_colors = {
-            "High": "#902018",   # Red
-            "Medium": "#93871c", # Yellow
-            "Low": "#2b6a2d"     # Green
+            "High": "#d9534f",   # Red
+            "Medium": "#f0ad4e", # Orange
+            "Low": "#5cb85c"     # Green
         }
 
-        # Create 3 columns for Low, Medium, High
-        col_low, col_medium, col_high = st.columns(3)
+        st.markdown("### 🗂️ Kanban Board")
+        col_high, col_medium, col_low = st.columns(3)
 
-        for priority, col in zip(["Low", "Medium", "High"], [col_low, col_medium, col_high]):
+        for priority, col in zip(["High", "Medium", "Low"], [col_high, col_medium, col_low]):
             with col:
-                st.markdown(f"### {priority}")
+                st.markdown(f"#### {priority}")
                 priority_tasks = df[df["priority"] == priority]
 
-                if priority_tasks.empty:
-                    st.markdown("No tasks.")
-                else:
-                    for i, row in priority_tasks.iterrows():
-                        due_date = row["due_date"]
-                        date_str = due_date.strftime('%d %b %Y') if pd.notnull(due_date) else "No due date"
-                        task_key = f"{row['task']}_{i}"
+                for i, row in priority_tasks.iterrows():
+                    due_date = row["due_date"]
+                    date_str = due_date.strftime('%d %b %Y') if pd.notnull(due_date) else "No due date"
+                    task_key = f"{row['task']}_{i}"
 
-                        st.markdown(f"""
-                        <div style="background-color:{priority_colors[priority]}; padding:4px; border-radius:4px; margin-bottom:4px; font-size:12px; color:white;">
-                            📝 <strong>{row['task']}</strong><br>
-                            📆 <em>{date_str}</em>
-                        </div>
-                        """, unsafe_allow_html=True)
+                    st.markdown(f"""
+                    <div style="background-color:{priority_colors[priority]}; padding:8px; border-radius:6px; margin-bottom:8px; font-size:13px; color:white;">
+                        <strong>📝 {row['task']}</strong><br>
+                        📆 <em>{date_str}</em>
+                    </div>
+                    """, unsafe_allow_html=True)
 
-                        with st.expander("❌ Cancel", expanded=False):
-                            confirm_key = f"confirm_{task_key}"
-                            if st.checkbox(f"Confirm cancel '{row['task']}'", key=confirm_key):
-                                todos.remove({
-                                    "task": row["task"],
-                                    "priority": row["priority"],
-                                    "due_date": row["due_date"].strftime("%Y-%m-%d") if pd.notnull(row["due_date"]) else ""
-                                })
-                                self.save_todo(todos)
-                                st.success(f"Task '{row['task']}' cancelled.")
-                                
-    
+                    with st.expander("❌ Cancel", expanded=False):
+                        confirm_key = f"confirm_{task_key}"
+                        if st.checkbox(f"Confirm cancel '{row['task']}'", key=confirm_key):
+                            todos.remove({
+                                "task": row["task"],
+                                "priority": row["priority"],
+                                "due_date": row["due_date"].strftime("%Y-%m-%d") if pd.notnull(row["due_date"]) else ""
+                            })
+                            self.save_todo(todos)
+                            st.success(f"Task '{row['task']}' cancelled.")
+        
     def add_task(self):
             new_task = st.text_input("Enter a new task")
             priority = st.selectbox("Select priority", self.PRIORITY_LEVELS)
