@@ -61,7 +61,7 @@ class ValidationTracker:
         for _, row in edited_data.iterrows():
             update_homologation_status(
                 product_id=row['product_id'],
-                homologated=row['homologated'],
+                homologated=row['Homologated'],
                 datasheet=row['datasheet'],
                 function_test=row['function_test'],
                 emc_test=row['emc_test'],
@@ -81,7 +81,7 @@ class ValidationTracker:
             'emc_test':'EMC',
             'datasheet': 'Datasheet'
             }, inplace=True)
-            
+
             edited_data.to_excel(writer, index=False)
         today = datetime.today().strftime("%d%m%Y")
         st.download_button(
