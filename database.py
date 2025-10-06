@@ -4,11 +4,10 @@ from datetime import datetime
 from sqlalchemy import create_engine
 import os
 
-
 # Ensure the folder exists
 os.makedirs('database', exist_ok=True)
 
-DB_NAME ='database/project_tracker.sql'
+DB_NAME = 'database/project_tracker.sql'
 
 
 def initialize_database(db_path: str = DB_NAME) -> None:
@@ -66,9 +65,11 @@ def fill_database_from_excel(file_path: str, db_path: str = DB_NAME) -> None:
     except Exception as e:
         print(f"❌ Error loading Excel file: {e}")
 
+
 def get_data_from_db(query: str, db_path: str = DB_NAME) -> pd.DataFrame:
     with sqlite3.connect(db_path) as conn:
         return pd.read_sql_query(query, conn)
+
 
 def update_homologation_status(
     product_id: str,
@@ -88,8 +89,18 @@ def update_homologation_status(
         cursor.execute("""
             UPDATE HomologationStatus
             SET homologated = ?, datasheet = ?, function_test = ?, emc_test = ?, note = ?, position = ?
-            WHERE product_id = ? AND reference_id = ?
+            WHERE product_id = ?
         """, (
-            homologated, datasheet, function_test, emc_test, note, position, product_id, reference_id
+            homologated, datasheet, function_test, emc_test, note, position, product_id
         ))
+
+        # Optional: update ProductOrders if needed
+        cursor.execute("""
+            UPDATE ProductOrders
+            SET reference_id = ?, current = ?, new = ?
+            WHERE product_id = ?
+        """, (
+            reference_id, current, new, product_id
+        ))
+
         conn.commit()

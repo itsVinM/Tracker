@@ -58,19 +58,18 @@ class ValidationTracker:
         )
 
     def save_changes(self, edited_data: pd.DataFrame):
-        
         for _, row in edited_data.iterrows():
             update_homologation_status(
-                reference_id=row['reference_id'],
                 product_id=row['product_id'],
-                homologated=row['Homologated'],
+                reference_id=row['reference_id'],
+                current=row['current'],
+                new=row['new'],
+                position=row['position'],
+                homologated=row['homologated'],
                 datasheet=row['datasheet'],
                 function_test=row['function_test'],
                 emc_test=row['emc_test'],
-                note=row['Note'],
-                current=row['current'],
-                position=row['Position'],
-                new=row['New']
+                note=row['note']
             )
         st.success("✅ Changes saved successfully.")
 
