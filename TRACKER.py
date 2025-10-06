@@ -23,9 +23,10 @@ class ValidationTracker:
         initialize_database()
         self.query = """
             SELECT po.reference_id, hs.product_id, hs.homologated, hs.datasheet, hs.function_test,
-                   hs.emc_test, hs.note, hs.position
+                hs.emc_test, hs.note, hs.current, hs.position, hs.new
             FROM ProductOrders po
-            JOIN HomologationStatus hs ON po.reference_id = hs.reference_id
+            JOIN HomologationStatus hs ON po.product_id = hs.product_id
+
         """
         self.data = self.load_data()
         self.column_config = self.get_column_config()
@@ -60,19 +61,27 @@ class ValidationTracker:
         for _, row in edited_data.iterrows():
             update_homologation_status(
                 product_id=row['product_id'],
-                reference_id=row['reference_id'],
                 homologated=row['homologated'],
                 datasheet=row['datasheet'],
                 function_test=row['function_test'],
                 emc_test=row['emc_test'],
                 note=row['note'],
-                position=row['position']
+                current=row['current'],
+                position=row['position'],
+                new=row['new']
             )
         st.success("✅ Changes saved successfully.")
 
     def download_backup(self, edited_data: pd.DataFrame):
+
         backup = BytesIO()
         with pd.ExcelWriter(backup) as writer:
+            edited_data.rename(columns={
+            'function_test': 'Function',
+            'emc_test':'EMC',
+            'datasheet': 'Datasheet'
+            }, inplace=True)
+            
             edited_data.to_excel(writer, index=False)
         today = datetime.today().strftime("%d%m%Y")
         st.download_button(

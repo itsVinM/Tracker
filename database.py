@@ -12,23 +12,24 @@ def initialize_database(db_path: str = DB_NAME) -> None:
 
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS ProductOrders (
+                product_id TEXT PRIMARY KEY,
                 reference_id TEXT UNIQUE,
-                current TEXT,     
                 new TEXT
             )
         """)
 
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS HomologationStatus (
-                Product_id TEXT PRIMARY KEY,
+                product_id TEXT PRIMARY KEY,
                 homologated TEXT,
                 datasheet BOOLEAN,
                 function_test BOOLEAN,
                 emc_test BOOLEAN,
                 note TEXT,
+                current TEXT,
                 position TEXT,
 
-                FOREIGN KEY(Product_id) REFERENCES ProductOrders(reference_id)
+                FOREIGN KEY(product_id) REFERENCES ProductOrders(product_id)
             )
         """)
 
@@ -38,14 +39,15 @@ def initialize_database(db_path: str = DB_NAME) -> None:
 def fill_database_from_excel(file_path: str, db_path: str = DB_NAME) -> None:
     try:
         df = pd.read_excel(file_path)
-        df.rename(columns={'product': 'Product_id'}, inplace=True)
 
-        df['reference_id'] = df['Request'].apply(lambda x: f"REF_{x}")
+        # Rename 'product' to 'product_id'
+        df.rename(columns={'product': 'product_id'}, inplace=True)
 
-        product_orders_df = df[['reference_id', 'Current', 'New']].copy()
-        product_orders_df.rename(columns={'Current': 'current', 'New': 'new'}, inplace=True)
+        df['reference_id'] = df['request_id']
 
-        homologation_df = df[['Product_id', 'reference_id', 'Homologated', 'Datasheet', 'Function', 'EMC', 'Note', 'Position']].copy()
+        product_orders_df = df[['product_id', 'reference_id']].copy()
+
+        homologation_df = df[['product_id', 'Homologated', 'Datasheet', 'Function', 'EMC', 'Note', 'Current', 'Position', 'New']].copy()
         homologation_df.rename(columns={
             'Function': 'function_test',
             'EMC': 'emc_test',
@@ -65,24 +67,26 @@ def get_data_from_db(query: str, db_path: str = DB_NAME) -> pd.DataFrame:
 
 def update_homologation_status(
     product_id: str,
-    reference_id: str,
     homologated: str,
     datasheet: bool,
     function_test: bool,
     emc_test: bool,
     note: str,
+    current: str,
     position: str,
+    new: str,
     db_path: str = DB_NAME
 ) -> None:
     with sqlite3.connect(db_path) as conn:
         cursor = conn.cursor()
         cursor.execute("""
             UPDATE HomologationStatus
-            SET reference_id = ?, homologated = ?, datasheet = ?, function_test = ?, emc_test = ?, 
-                note = ?, position = ?
+            SET homologated = ?, datasheet = ?, function_test = ?, emc_test = ?, note = ?, 
+                current = ?, position = ?, new = ?
             WHERE product_id = ?
         """, (
-            reference_id, homologated, datasheet, function_test, emc_test,
-            note, position, product_id
+            homologated, datasheet, function_test, emc_test, note,
+            current, position, new,
+            product_id
         ))
         conn.commit()
