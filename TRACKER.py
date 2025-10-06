@@ -20,8 +20,7 @@ st.set_page_config(
 class ValidationTracker:
     # --- Defined Homologation Options (Updated as requested) ---
     HOMOLOGATION_OPTIONS = [
-        "⏳AWAIT", "🛠️FUNCTION", "📡 EMC", "❌ FAILED", "✅ PASSED",
-        "✅ DATASHEET", "✅ FUNCTION", "✅ EMC" 
+        "⏳AWAIT", "🛠️FUNCTION", "📡 EMC", "❌ FAILED", "✅ PASSED" 
     ]
     # -----------------------------------------------------------
 
@@ -194,12 +193,10 @@ def project_tracker():
         with but2:
             tracker.download_backup(edited_data) 
         
-        st.markdown("---")
-        
         # Display summary of filtered data
         st.info(f"Displaying **{len(df)}** projects out of **{len(tracker.data)}** total projects (Filtered: {len(df)}).")
         
-        st.text("MOS, Diodes and all resonant components need EMC & Functionality test")
+        st.info("MOS, Diodes and all resonant components need EMC & Functionality test")
        
     with tab2:
         tracker.display_charts()
