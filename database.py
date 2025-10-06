@@ -8,7 +8,7 @@ import os
 # Ensure the folder exists
 os.makedirs('database', exist_ok=True)
 
-DB_NAME ='database/project_tracker.db'
+DB_NAME ='database/project_tracker.sql'
 
 
 def initialize_database(db_path: str = DB_NAME) -> None:
