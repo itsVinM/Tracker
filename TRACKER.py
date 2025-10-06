@@ -22,8 +22,9 @@ class ValidationTracker:
     def __init__(self):
         initialize_database()
         self.query = """
-            SELECT po.reference_id, hs.product_id, hs.homologated, hs.datasheet, hs.function_test,
-                hs.emc_test, hs.note, hs.current, hs.position, hs.new
+            SELECT po.reference_id, po.current, po.new,
+                hs.product_id, hs.homologated, hs.datasheet, hs.function_test,
+                hs.emc_test, hs.note, hs.position
             FROM ProductOrders po
             JOIN HomologationStatus hs ON po.product_id = hs.product_id
 

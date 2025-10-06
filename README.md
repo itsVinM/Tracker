@@ -29,4 +29,10 @@ To install all the required libraries
    streamlit run TRACKER.py
 ```
 
+**SQL BACKUP**
+```bash
+sqlite3 project_tracker.db .dump > backup.sql
+
+sqlite3 project_tracker.db < backup.sql
+```
 
