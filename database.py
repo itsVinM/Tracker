@@ -12,8 +12,10 @@ def initialize_database(db_path: str = DB_NAME) -> None:
 
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS ProductOrders (
-                product_id TEXT PRIMARY KEY,
+                product_id TEXT,
                 reference_id TEXT,
+                current TEXT,
+                new TEXT,
                 PRIMARY KEY (product_id, reference_id)   
             )
         """)
@@ -27,8 +29,7 @@ def initialize_database(db_path: str = DB_NAME) -> None:
                 emc_test BOOLEAN,
                 note TEXT,
                 position TEXT,
-                current TEXT,
-                new TEXT,
+                
                 FOREIGN KEY(product_id) REFERENCES ProductOrders(product_id)
             )
         """)
