@@ -23,7 +23,7 @@ def database():
         Used TEXT,
         Position TEXT,
         Day DATE,
-        New TEXT,
+        New TEXT
         
     )
     """)
@@ -46,8 +46,8 @@ def update_data(request_id, reference, homologated, datasheet, function, emc, no
     cursor = conn.cursor()
     cursor.execute('''
     UPDATE ProjectTracker
-    SET Reference = ?, Homologated = ?, Datasheet = ?, Function = ?, EMC = ?, Note = ?, Current = ?, Used = ?, Position = ?, Day = ?
+    SET Reference = ?, Homologated = ?, Datasheet = ?, Function = ?, EMC = ?, Note = ?, Current = ?, Used = ?, Position = ?, Day = ?, New = ?
     WHERE Request = ?
-    ''', (reference, homologated, current, used, position, day, new, datasheet, function, emc, note, request_id))
+    ''', (reference, homologated, datasheet, function, emc, note, current, used, position, day, new, request_id))
     conn.commit()
-    conn.close()
+
