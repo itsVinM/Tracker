@@ -70,13 +70,26 @@ def get_data_from_db(query: str, db_path: str = DB_NAME) -> pd.DataFrame:
     with sqlite3.connect(db_path) as conn:
         return pd.read_sql_query(query, conn)
 
-
-def update_homologation_status(reference_id, product_id, homologated, datasheet, function_test, emc_test, note, current, position, new):
-    # Example SQL update (adjust to your schema)
-    query = """
-        UPDATE HomologationStatus
-        SET homologated = ?, datasheet = ?, function_test = ?, emc_test = ?, note = ?, current = ?, position = ?, new = ?
-        WHERE product_id = ? AND reference_id = ?
-    """
-    cursor.execute(query, (homologated, datasheet, function_test, emc_test, note, current, position, new, product_id, reference_id))
-    connection.commit()
+def update_homologation_status(
+    product_id: str,
+    reference_id: str,
+    current: str,
+    new: str,
+    position: str,
+    homologated: str,
+    datasheet: bool,
+    function_test: bool,
+    emc_test: bool,
+    note: str,
+    db_path: str = DB_NAME
+) -> None:
+    with sqlite3.connect(db_path) as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE HomologationStatus
+            SET homologated = ?, datasheet = ?, function_test = ?, emc_test = ?, note = ?, position = ?
+            WHERE product_id = ? AND reference_id = ?
+        """, (
+            homologated, datasheet, function_test, emc_test, note, position, product_id, reference_id
+        ))
+        conn.commit()
