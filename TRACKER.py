@@ -22,21 +22,11 @@ class ValidationTracker:
     def __init__(self):
         initialize_database()
         self.query = """
-            SELECT 
-                o.request_code,
-                hs.product_id,
-                hs.homologated,
-                hs.datasheet,
-                hs.function_test,
-                hs.emc_test,
-                hs.note,
-                hs.current,
-                hs.used,
-                hs.position,
-                hs.new
-            FROM OrderList o
-            JOIN ProductsList p ON o.reference_id = p.reference_id
-            JOIN HomologationStatus hs ON p.product_id = hs.product_id
+            SELECT po.reference_id, hs.product_id, hs.homologated, hs.datasheet, hs.function_test,
+                hs.emc_test, hs.note, hs.current, hs.position, hs.new
+            FROM ProductOrders po
+            JOIN HomologationStatus hs ON po.product_id = hs.product_id
+
         """
         self.data = self.load_data()
         self.column_config = self.get_column_config()
@@ -77,7 +67,6 @@ class ValidationTracker:
                 emc_test=row['emc_test'],
                 note=row['note'],
                 current=row['current'],
-                used=row['used'],
                 position=row['position'],
                 new=row['new']
             )
