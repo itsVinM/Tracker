@@ -23,10 +23,9 @@ class ValidationTracker:
         initialize_database()
         self.query = """
             SELECT po.reference_id, hs.product_id, hs.homologated, hs.datasheet, hs.function_test,
-                hs.emc_test, hs.note, hs.current, hs.position, hs.new
+                   hs.emc_test, hs.note, hs.position
             FROM ProductOrders po
-            JOIN HomologationStatus hs ON po.product_id = hs.product_id
-
+            JOIN HomologationStatus hs ON po.reference_id = hs.reference_id
         """
         self.data = self.load_data()
         self.column_config = self.get_column_config()
@@ -61,14 +60,13 @@ class ValidationTracker:
         for _, row in edited_data.iterrows():
             update_homologation_status(
                 product_id=row['product_id'],
+                reference_id=row['reference_id'],
                 homologated=row['homologated'],
                 datasheet=row['datasheet'],
                 function_test=row['function_test'],
                 emc_test=row['emc_test'],
                 note=row['note'],
-                current=row['current'],
-                position=row['position'],
-                new=row['new']
+                position=row['position']
             )
         st.success("✅ Changes saved successfully.")
 
