@@ -86,6 +86,8 @@ def update_homologation_status(
 ) -> None:
     with sqlite3.connect(db_path) as conn:
         cursor = conn.cursor()
+
+        # Update HomologationStatus table
         cursor.execute("""
             UPDATE HomologationStatus
             SET homologated = ?, datasheet = ?, function_test = ?, emc_test = ?, note = ?, position = ?
@@ -94,7 +96,7 @@ def update_homologation_status(
             homologated, datasheet, function_test, emc_test, note, position, product_id
         ))
 
-        # Optional: update ProductOrders if needed
+        # Update ProductOrders table
         cursor.execute("""
             UPDATE ProductOrders
             SET reference_id = ?, current = ?, new = ?

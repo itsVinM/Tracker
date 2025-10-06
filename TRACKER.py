@@ -64,12 +64,12 @@ class ValidationTracker:
                 reference_id=row['reference_id'],
                 current=row['current'],
                 new=row['new'],
-                position=row['position'],
-                homologated=row['homologated'],
+                position=row['Position'],
+                homologated=row['Homologated'],
                 datasheet=row['datasheet'],
                 function_test=row['function_test'],
                 emc_test=row['emc_test'],
-                note=row['note']
+                note=row['Note']
             )
         st.success("✅ Changes saved successfully.")
 
