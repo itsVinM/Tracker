@@ -58,7 +58,7 @@ class ValidationTracker:
         )
 
     def save_changes(self, edited_data: pd.DataFrame):
-        for _, row in self.data.iterrows():
+        for _, row in edited_data.iterrows():
             update_homologation_status(
                 reference_id=row['reference_id'],
                 product_id=row['product_id'],
@@ -72,6 +72,7 @@ class ValidationTracker:
                 new=row['new']
             )
         st.success("✅ Changes saved successfully.")
+
 
     def download_backup(self, edited_data: pd.DataFrame):
         backup = BytesIO()
