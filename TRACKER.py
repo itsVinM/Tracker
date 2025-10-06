@@ -80,7 +80,9 @@ class ValidationTracker:
             edited_data.rename(columns={
             'function_test': 'Function',
             'emc_test':'EMC',
-            'datasheet': 'Datasheet'
+            'datasheet': 'Datasheet',
+            'current': 'Current',
+            'new': 'New',
             }, inplace=True)
 
             edited_data.to_excel(writer, index=False)
