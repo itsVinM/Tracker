@@ -56,12 +56,14 @@ class ValidationTracker:
 
         ref_filter = st.sidebar.selectbox("Reference ID", options=["All"] + sorted(df['reference_id'].unique()))
         prod_filter = st.sidebar.selectbox("Product ID", options=["All"] + sorted(df['product_id'].unique()))
+        status_filter = st.sidebar.selectbox("Homologated", options=["All"] + sorted(df['homologated'].unique()))
 
         if ref_filter != "All":
             df = df[df['reference_id'] == ref_filter]
         if prod_filter != "All":
             df = df[df['product_id'] == prod_filter]
-
+        if status_filter != "All":
+            df = df[df['homologated'] == status_filter]
 
         return df
 
@@ -165,6 +167,8 @@ def project_tracker():
 
         with col2:
             tracker.download_backup(edited_data)
+
+        
 
     with tab2:
         todo = TodoManager()
