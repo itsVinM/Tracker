@@ -13,7 +13,6 @@ def database():
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS ProjectTracker (
             Request TEXT PRIMARY KEY,
-            Reference INTEGER,
             Homologated TEXT,
             Datasheet BOOLEAN,
             Function BOOLEAN,
@@ -41,14 +40,14 @@ def get_data_from_db(query):
     return df
 
 
-def update_data(request_id, reference, homologated, datasheet, function, emc, note, current, used, position , new):
+def update_data(request_id, homologated, datasheet, function, emc, note, current, used, position , new):
     conn = sqlite3.connect('project_tracker.db')
     cursor = conn.cursor()
     cursor.execute('''
         UPDATE ProjectTracker
-        SET Reference = ?, Homologated = ?, Datasheet = ?, Function = ?, EMC = ?, Note = ?, Current = ?, Used = ?, Position = ?, New = ?
+        SET Homologated = ?, Datasheet = ?, Function = ?, EMC = ?, Note = ?, Current = ?, Used = ?, Position = ?, New = ?
         WHERE Request = ?
-    ''', (reference, homologated, datasheet, function, emc, note, current, used, position, new, request_id))
+    ''', (homologated, datasheet, function, emc, note, current, used, position, new, request_id))
     conn.commit()
     conn.close()
 
