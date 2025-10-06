@@ -40,7 +40,7 @@ def fill_database_from_excel(file_path: str, db_path: str = DB_NAME) -> None:
         df = pd.read_excel(file_path)
 
         df['reference_id'] = df['Request'].apply(lambda x: f"REF_{x}")
-        df['product_id'] = df['Request'].apply(lambda x: f"PROD_{x}")
+        
 
         product_orders_df = df[['product_id', 'reference_id']].copy()
 
