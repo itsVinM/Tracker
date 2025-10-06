@@ -8,7 +8,7 @@ from database import (
     initialize_database,
     get_data_from_db,
     fill_database_from_excel,
-    update_homologation_status
+    update_product_tracker
 )
 from todolist import TodoManager
 
@@ -21,13 +21,7 @@ st.set_page_config(
 class ValidationTracker:
     def __init__(self):
         initialize_database()
-        self.query = """
-            SELECT po.reference_id, po.current, po.new,
-                   hs.product_id, hs.homologated, hs.datasheet, hs.function_test,
-                   hs.emc_test, hs.note, hs.position
-            FROM ProductOrders po
-            JOIN HomologationStatus hs ON po.product_id = hs.product_id
-        """
+        self.query = "SELECT * FROM ProductTracker"
         self.data = self.load_data()
         self.column_config = self.get_column_config()
 
@@ -59,17 +53,17 @@ class ValidationTracker:
 
     def save_changes(self, edited_data: pd.DataFrame):
         for _, row in edited_data.iterrows():
-            update_homologation_status(
+            update_product_tracker(
                 product_id=row['product_id'],
                 reference_id=row['reference_id'],
                 current=row['current'],
                 new=row['new'],
-                position=row['Position'],
-                homologated=row['Homologated'],
+                position=row['position'],
+                homologated=row['homologated'],
                 datasheet=row['datasheet'],
                 function_test=row['function_test'],
                 emc_test=row['emc_test'],
-                note=row['Note']
+                note=row['note']
             )
         st.success("✅ Changes saved successfully.")
 
@@ -132,7 +126,7 @@ def project_tracker():
     with tab1:
         tracker = ValidationTracker()
         col1, col2 = st.columns(2, gap="small")
-        st.text("MOS, Diodes and all resonant components need EMC & Functionality test")
+        st.warning("MOS, Diodes and all resonant components need EMC & Functionality test")
         edited_data = tracker.display_editor()
         tracker.display_charts()
         st.write("Columns in edited data:", edited_data.columns.tolist())
