@@ -1,89 +1,53 @@
-import sqlite3
-import pandas as pd
+
+import re, shutil, sqlite3, os
+from datetime import datetime
 from sqlalchemy import create_engine
-import os
+import pandas as pd
 
-# Ensure the folder exists
-os.makedirs('database', exist_ok=True)
 
-DB_NAME = 'database/project_tracker.sql'
+################# DATABASE SECTION ##############
 
-def initialize_database(db_path: str = DB_NAME) -> None:
-    """Create a unified ProductTracker table."""
-    with sqlite3.connect(db_path) as conn:
-        cursor = conn.cursor()
+def database():
+    conn = sqlite3.connect('project_tracker.db')
+    cursor = conn.cursor()
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS ProjectTracker (
+        Request TEXT PRIMARY KEY,
+        Reference INTEGER,
+        Homologated TEXT,
+        Datasheet BOOLEAN,
+        Function BOOLEAN,
+        EMC BOOLEAN,
+        Note TEXT
+        Current TEXT,
+        Used TEXT,
+        Position TEXT,
+        Day DATE,
+        New TEXT,
+        
+    )
+    """)
+    conn.commit()
+    conn.close()
 
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS ProductTracker (
-                reference_id TEXT PRIMARY KEY,
-                product_id TEXT ,
-                current TEXT,
-                new TEXT,
-                homologated TEXT,
-                datasheet BOOLEAN,
-                function_test BOOLEAN,
-                emc_test BOOLEAN,
-                note TEXT,
-                position TEXT
-            )
-        """)
+def fill_database(file):
+    excel = pd.read_excel(file)
+    engine = create_engine('sqlite:///project_tracker.db')
+    excel.to_sql('ProjectTracker', con=engine, if_exists='replace', index=False)
 
-        conn.commit()
+def get_data_from_db(query):
+    conn = sqlite3.connect('project_tracker.db')
+    df = pd.read_sql_query(query, conn)
+    conn.close()
+    return df
 
-def fill_database_from_excel(file_path: str, db_path: str = DB_NAME) -> None:
-    try:
-        df = pd.read_excel(file_path, engine='openpyxl')
-
-        if 'product' in df.columns:
-            df.rename(columns={'product': 'product_id'}, inplace=True)
-
-        tracker_df = df[[
-            'product_id', 'reference_id', 'Current', 'New',
-            'Homologated', 'Datasheet', 'Function', 'EMC', 'Note', 'Position'
-        ]].copy()
-
-        tracker_df.rename(columns={
-            'Current': 'current',
-            'New': 'new',
-            'Function': 'function_test',
-            'EMC': 'emc_test',
-            'Datasheet': 'datasheet'
-        }, inplace=True)
-
-        engine = create_engine(f'sqlite:///{db_path}')
-        tracker_df.to_sql('ProductTracker', con=engine, if_exists='replace', index=False)
-
-    except Exception as e:
-        print(f"❌ Error loading Excel file: {e}")
-
-def update_product_tracker(
-    product_id: str,
-    reference_id: str,
-    current: str,
-    new: str,
-    position: str,
-    homologated: str,
-    datasheet: bool,
-    function_test: bool,
-    emc_test: bool,
-    note: str,
-    db_path: str = DB_NAME
-) -> None:
-    with sqlite3.connect(db_path) as conn:
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            UPDATE ProductTracker
-            SET reference_id = ?, current = ?, new = ?, homologated = ?, datasheet = ?, 
-                function_test = ?, emc_test = ?, note = ?, position = ?
-            WHERE product_id = ?
-        """, (
-            reference_id, current, new, homologated, datasheet,
-            function_test, emc_test, note, position, product_id
-        ))
-
-        conn.commit()
-
-def get_data_from_db(query: str, db_path: str = DB_NAME) -> pd.DataFrame:
-    with sqlite3.connect(db_path) as conn:
-        return pd.read_sql_query(query, conn)
+def update_data(request_id, reference, homologated, datasheet, function, emc, note, current, used, position, day, new):
+    conn = sqlite3.connect('project_tracker.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+    UPDATE ProjectTracker
+    SET Reference = ?, Homologated = ?, Datasheet = ?, Function = ?, EMC = ?, Note = ?, Current = ?, Used = ?, Position = ?, Day = ?
+    WHERE Request = ?
+    ''', (reference, homologated, current, used, position, day, new, datasheet, function, emc, note, request_id))
+    conn.commit()
+    conn.close()
