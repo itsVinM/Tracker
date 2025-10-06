@@ -60,7 +60,6 @@ class ValidationTracker:
     def save_changes(self, edited_data: pd.DataFrame):
         for _, row in edited_data.iterrows():
             update_homologation_status(
-                reference_id=row['reference_id'],
                 product_id=row['product_id'],
                 homologated=row['homologated'],
                 datasheet=row['datasheet'],
@@ -73,18 +72,10 @@ class ValidationTracker:
             )
         st.success("✅ Changes saved successfully.")
 
-
     def download_backup(self, edited_data: pd.DataFrame):
         backup = BytesIO()
         with pd.ExcelWriter(backup) as writer:
-            self.data.rename(columns={
-                'function_test': 'Function',
-                'emc_test': 'EMC',
-                'datasheet': 'Datasheet',
-                'current': 'Current',
-                'new': 'New',
-            }, inplace=True)
-            self.data.to_excel(writer, index=False)
+            edited_data.to_excel(writer, index=False)
         today = datetime.today().strftime("%d%m%Y")
         st.download_button(
             label="🗂️ Download Backup",
