@@ -7,8 +7,8 @@ from typing import Dict
 from pathlib import Path
 
 
-HOME_DIR = os.path.expanduser('~')
-DOCUMENTS_DIR = Path(HOME_DIR) / 'Documents' / 'ProjectTrackerData' 
+#HOME_DIR = os.path.expanduser('~')
+#DOCUMENTS_DIR = Path(HOME_DIR) / 'Documents' / 'ProjectTrackerData' 
 DB_NAME = 'project_tracker.db'
 
 def database():
