@@ -54,16 +54,16 @@ class ValidationTracker:
     def save_changes(self, edited_data: pd.DataFrame):
         for _, row in edited_data.iterrows():
             update_product_tracker(
-                product_id=row['product_id'],
                 reference_id=row['reference_id'],
+                product_id=row['product_id'],
                 current=row['current'],
                 new=row['new'],
-                position=row['position'],
-                homologated=row['homologated'],
+                position=row['Position'],
+                homologated=row['Homologated'],
                 datasheet=row['datasheet'],
                 function_test=row['function_test'],
                 emc_test=row['emc_test'],
-                note=row['note']
+                note=row['Note']
             )
         st.success("✅ Changes saved successfully.")
 
@@ -126,7 +126,7 @@ def project_tracker():
     with tab1:
         tracker = ValidationTracker()
         col1, col2 = st.columns(2, gap="small")
-        st.warning("MOS, Diodes and all resonant components need EMC & Functionality test")
+        st.text("MOS, Diodes and all resonant components need EMC & Functionality test")
         edited_data = tracker.display_editor()
         tracker.display_charts()
         st.write("Columns in edited data:", edited_data.columns.tolist())

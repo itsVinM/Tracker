@@ -15,8 +15,8 @@ def initialize_database(db_path: str = DB_NAME) -> None:
 
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS ProductTracker (
-                product_id TEXT PRIMARY KEY,
-                reference_id TEXT,
+                reference_id TEXT PRIMARY KEY,
+                product_id TEXT ,
                 current TEXT,
                 new TEXT,
                 homologated TEXT,
