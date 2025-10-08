@@ -12,7 +12,7 @@ from docx import Document
 
 # --- To-Do Manager Class ---
 class TodoManager:
-    TODO_FILE = "database/todo_list.json"
+    TODO_FILE = "todo_list.json"
     PRIORITY_LEVELS = ["High", "Medium", "Low"]
 
     def load_todo(self) -> List[Dict[str, str]]:
