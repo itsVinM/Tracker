@@ -22,6 +22,18 @@ class ValidationTracker:
     HOMOLOGATION_OPTIONS = [
         "⏳AWAIT R&D", "🆘PRODUCT N/A", "🔍GOT PRODUCT", "🛠️FUNCTION", "📡 EMC RADIATED", "⚡ EMC CONDUCTED", "❌ FAILED", "✅ PASSED" 
     ]
+    
+    COLOR_MAP = {
+        "⏳AWAIT R&D": "amber",
+        "🆘PRODUCT N/A": "gray",
+        "🔍GOT PRODUCT": "purple",
+        "🛠️FUNCTION": "pistachio",
+        "📡 EMC RADIATED": "lightblue",
+        "⚡ EMC CONDUCTED": "lightblue",
+        "❌ FAILED": "red",
+        "✅ PASSED": "green"
+    }
+
     # -----------------------------------------------------------
 
     def __init__(self):
@@ -56,6 +68,7 @@ class ValidationTracker:
             "Homologated": st.column_config.SelectboxColumn(
                         "Homologated",
                         options=self.HOMOLOGATION_OPTIONS, 
+                        color=[self.COLOR_MAP[opt] for opt in self.HOMOLOGATION_OPTION],
                         width="medium"), 
                         
             "Note": st.column_config.TextColumn("Note", disabled=False),
