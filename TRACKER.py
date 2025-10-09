@@ -182,7 +182,7 @@ def project_tracker():
                 df = df[df['Homologated'].isin(homologated_filter)]
 
 
-        but1, but2 = st.columns(2)
+        but1, but2, info1 = st.columns(3)
         # 2. Display the filtered and editable table, capturing the DataFrame result
         edited_data = tracker.display_editor(df) 
         
@@ -200,12 +200,9 @@ def project_tracker():
         
         with but2:
             tracker.download_backup(edited_data) 
+        with info1:
+            st.info(f"Displaying **{len(df)}** projects out of **{len(tracker.data)}** total projects (Filtered: {len(df)}).")
         
-        # Display summary of filtered data
-        st.info(f"Displaying **{len(df)}** projects out of **{len(tracker.data)}** total projects (Filtered: {len(df)}).")
-        
-        st.info("MOS, Diodes and all resonant components need EMC & Functionality test")
-       
     with tab2:
         tracker.display_charts()
         
