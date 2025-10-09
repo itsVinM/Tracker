@@ -166,12 +166,12 @@ class ValidationTracker:
 
             # Plot
             fig_product = go.Figure(data=[
-                go.Bar(y=product_counts.index, x=product_counts.values)
+                go.Bar(x=product_counts.index, y=product_counts.values)
             ])
             fig_product.update_layout(
                 title="Product Usage",
-                yaxis_title="Product",
-                xaxis_title="Count",
+                xaxis_title="Product",
+                yaxis_title="Count",
                 height=400
             )
             st.plotly_chart(fig_product, use_container_width=True)
