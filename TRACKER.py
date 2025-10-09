@@ -113,40 +113,57 @@ class ValidationTracker:
             file_name=f"Backup_Project_Tracker_{today}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
-
     def display_charts(self):
-            df = self.data
+        df = self.data
 
-            # Count Checked and Unchecked for each category
-            datasheet_counts = df['Datasheet'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
-            function_counts = df['Function'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
-            emc_counts = df['EMC'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
+        # Count Checked and Unchecked for each category
+        datasheet_counts = df['Datasheet'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
+        function_counts = df['Function'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
+        emc_counts = df['EMC'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
 
-            # Create grouped bar chart
-            fig = go.Figure()
+        # Create validation summary chart
+        fig_validation = go.Figure()
+        fig_validation.add_trace(go.Bar(name='Datasheet Checked', x=['Datasheet'], y=[datasheet_counts.get('Checked', 0)], marker_color='lightgreen'))
+        fig_validation.add_trace(go.Bar(name='Datasheet Unchecked', x=['Datasheet'], y=[datasheet_counts.get('Unchecked', 0)], marker_color='salmon'))
+        fig_validation.add_trace(go.Bar(name='Function Checked', x=['Function'], y=[function_counts.get('Checked', 0)], marker_color='lightgreen'))
+        fig_validation.add_trace(go.Bar(name='Function Unchecked', x=['Function'], y=[function_counts.get('Unchecked', 0)], marker_color='salmon'))
+        fig_validation.add_trace(go.Bar(name='EMC Checked', x=['EMC'], y=[emc_counts.get('Checked', 0)], marker_color='lightgreen'))
+        fig_validation.add_trace(go.Bar(name='EMC Unchecked', x=['EMC'], y=[emc_counts.get('Unchecked', 0)], marker_color='salmon'))
 
-            # Validation metrics (left axis)
-            fig.add_trace(go.Bar(name='Datasheet Checked', x=['Datasheet'], y=[datasheet_counts.get('Checked', 0)], marker_color='lightgreen'))
-            fig.add_trace(go.Bar(name='Datasheet Unchecked', x=['Datasheet'], y=[datasheet_counts.get('Unchecked', 0)], marker_color='salmon'))
+        fig_validation.update_layout(
+            title="Validation Summary",
+            barmode='group',
+            xaxis_title="Category",
+            yaxis_title="Validation Counts",
+            width=800,
+            height=500
+        )
 
-            fig.add_trace(go.Bar(name='Function Checked', x=['Function'], y=[function_counts.get('Checked', 0)], marker_color='lightgreen'))
-            fig.add_trace(go.Bar(name='Function Unchecked', x=['Function'], y=[function_counts.get('Unchecked', 0)], marker_color='salmon'))
+        # Homologation status chart
+        homo_counts = df['Homologated'].value_counts()
+        fig_homologation = go.Figure(data=[
+            go.Pie(labels=homo_counts.index, values=homo_counts.values, hole=0.3)
+        ])
+        fig_homologation.update_layout(title="Homologation Status", height=500)
 
-            fig.add_trace(go.Bar(name='EMC Checked', x=['EMC'], y=[emc_counts.get('Checked', 0)], marker_color='lightgreen'))
-            #fig.add_trace(go.Bar(name='EMC Unchecked', x=['EMC'], y=[emc_counts.get('Unchecked', 0)], marker_color='tomato'))
-            
-                # Layout
-            fig.update_layout(
-                    title="Validation Summary",
-                    barmode='group',
-                    xaxis_title="Category",
-                    yaxis=dict(title='Validation Counts'),
-                    width=800,
-                    height=600
-                )
+        # Layout: Two columns
+        col1, col2 = st.columns(2)
+        with col1:
+            st.plotly_chart(fig_validation, use_container_width=True)
+        with col2:
+            st.plotly_chart(fig_homologation, use_container_width=True)
 
-                # Display in Streamlit
-            st.plotly_chart(fig, use_container_width=True)
+        # Additional chart: Product distribution
+        st.subheader("Product Distribution")
+        if 'Product' in df.columns:
+            product_counts = df['Product'].value_counts()
+            fig_product = go.Figure(data=[
+                go.Bar(x=product_counts.index, y=product_counts.values, marker_color='skyblue')
+            ])
+            fig_product.update_layout(title="Product Usage", xaxis_title="Product", yaxis_title="Count")
+
+
+    
     
 
 def project_tracker():
@@ -201,7 +218,7 @@ def project_tracker():
         with but2:
             tracker.download_backup(edited_data) 
         with info1:
-            st.info(f"Displaying **{len(df)}** projects out of **{len(tracker.data)}** total projects (Filtered: {len(df)}).")
+            st.info(f"Displaying **{len(df)}** projects out of **{len(tracker.data)} (Filtered: {len(df)}).")
         with info2:
             st.info(f"EMC compulsory for semiconductors, L & C")
     with tab2:
