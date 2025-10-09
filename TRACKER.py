@@ -182,7 +182,7 @@ def project_tracker():
                 df = df[df['Homologated'].isin(homologated_filter)]
 
 
-        but1, but2, info1 = st.columns(3)
+        but1, but2, info1, info2 = st.columns(4)
         # 2. Display the filtered and editable table, capturing the DataFrame result
         edited_data = tracker.display_editor(df) 
         
@@ -202,7 +202,8 @@ def project_tracker():
             tracker.download_backup(edited_data) 
         with info1:
             st.info(f"Displaying **{len(df)}** projects out of **{len(tracker.data)}** total projects (Filtered: {len(df)}).")
-        
+        with info2:
+            st.info(f"EMC compulsory for semiconductors, L & C")
     with tab2:
         tracker.display_charts()
         
