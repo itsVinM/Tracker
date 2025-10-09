@@ -144,7 +144,7 @@ class ValidationTracker:
         fig_homologation = go.Figure(data=[
             go.Pie(labels=homo_counts.index, values=homo_counts.values, hole=0.3)
         ])
-        fig_homologation.update_layout(title="Homologation Status:", height=500)
+        fig_homologation.update_layout(title="Homologation Status", height=500)
 
         # Layout: Two columns
         col1, col2 = st.columns(2)
@@ -152,30 +152,20 @@ class ValidationTracker:
             st.plotly_chart(fig_validation, use_container_width=True)
         with col2:
             st.plotly_chart(fig_homologation, use_container_width=True)
-        
 
-        st.subheader("Product Distribution")
+        # Homologation Status by Product (Stacked Bar Chart)
+        st.subheader("Homologation Status by Product")
+        product_status = df.groupby(['Product', 'Homologated']).size().reset_index(name='Count')
+        fig_stacked = px.bar(
+            product_status,
+            x='Product',
+            y='Count',
+            color='Homologated',
+            title="Homologation Status by Product",
+            barmode='stack'
+        )
+        st.plotly_chart(fig_stacked, use_container_width=True)
 
-        if 'Product' in df.columns:
-            # Clean and normalize product entries
-            product_series = df['Product'].dropna().astype(str)
-            exploded_products = product_series.str.split('|').explode().str.strip()
-
-            # Count occurrences
-            product_counts = exploded_products.value_counts()
-
-            # Plot
-            fig_product = go.Figure(data=[
-                go.Bar(x=product_counts.index, y=product_counts.values)
-            ])
-            fig_product.update_layout(
-                title="Product Usage",
-                xaxis_title="Product",
-                yaxis_title="Count",
-                height=400
-            )
-            st.plotly_chart(fig_product, use_container_width=True)
-       
 
 def project_tracker():
     tracker = ValidationTracker()
