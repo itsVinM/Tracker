@@ -218,7 +218,7 @@ def project_tracker():
         with but2:
             tracker.download_backup(edited_data) 
         with info1:
-            st.info(f"Displaying **{len(df)}** projects out of **{len(tracker.data)} (Filtered: {len(df)}).")
+            st.info(f"Displaying **{len(df)}** projects out of **{len(tracker.data)}**")
         with info2:
             st.info(f"EMC compulsory for semiconductors, L & C")
     with tab2:
