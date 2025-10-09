@@ -153,7 +153,7 @@ class ValidationTracker:
         with col2:
             st.plotly_chart(fig_homologation, use_container_width=True)
         
-        # Additional chart: Product distribution
+
         st.subheader("Product Distribution")
 
         if 'Product' in df.columns:
@@ -181,7 +181,7 @@ def project_tracker():
     tracker = ValidationTracker()
     df = tracker.data 
     
-    tab1, tab2, tab3, tab4 = st.tabs(["📋 Validation Request", "📈 Visual Summary", "📥 Todo!", "🤖Automated Validation"])
+    tab1, tab2, tab3, tab4 = st.tabs(["📋 Validation Request", "📈 Visual Summary", "📥 Todo!", "🤖 Automated Validation"])
 
     with tab1:
         st.subheader("Validation Tracker - Project Status")
