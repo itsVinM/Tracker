@@ -68,7 +68,7 @@ class ValidationTracker:
             "Homologated": st.column_config.SelectboxColumn(
                         "Homologated",
                         options=self.HOMOLOGATION_OPTIONS, 
-                        color=[self.COLOR_MAP[opt] for opt in self.HOMOLOGATION_OPTION],
+                        color=[self.COLOR_MAP[opt] for opt in self.HOMOLOGATION_OPTIONS],
                         width="medium"), 
                         
             "Note": st.column_config.TextColumn("Note", disabled=False),
