@@ -20,7 +20,7 @@ st.set_page_config(
 class ValidationTracker:
     # --- Defined Homologation Options (Updated as requested) ---
     HOMOLOGATION_OPTIONS = [
-        "⏳AWAIT", "🛠️FUNCTION", "📡 EMC", "❌ FAILED", "✅ PASSED" 
+        "⏳AWAIT R&D", "🆘PRODUCT N/A", "🛠️FUNCTION", "📡 EMC RADIATED", "⚡ EMC CONDUCTED", "❌ FAILED", "✅ PASSED" 
     ]
     # -----------------------------------------------------------
 
