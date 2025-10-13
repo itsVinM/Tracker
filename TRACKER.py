@@ -183,7 +183,7 @@ def project_tracker():
         but1, but2, info1, info2 = st.columns(4)
         edited_data = tracker.display_editor(df) 
         with but1:
-            if st.button("save changes"):
+            if st.button("📋 Save changes"):
                 tracker.save_changes(edited_data)
 
         with but2:
