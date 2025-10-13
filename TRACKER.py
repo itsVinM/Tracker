@@ -183,7 +183,8 @@ def project_tracker():
         but1, but2, info1, info2 = st.columns(4)
         edited_data = tracker.display_editor(df) 
         with but1:
-            tracker.save_changes(edited_data)
+            if st.button("save changes"):
+                tracker.save_changes(edited_data)
 
         with but2:
             tracker.download_backup(edited_data) 
