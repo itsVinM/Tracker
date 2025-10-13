@@ -121,24 +121,6 @@ class ValidationTracker:
         function_counts = df['Function'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
         emc_counts = df['EMC'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
 
-        # Create validation summary chart
-        fig_validation = go.Figure()
-        fig_validation.add_trace(go.Bar(name='Datasheet Checked', x=['Datasheet'], y=[datasheet_counts.get('Checked', 0)], marker_color='lightgreen'))
-        fig_validation.add_trace(go.Bar(name='Datasheet Unchecked', x=['Datasheet'], y=[datasheet_counts.get('Unchecked', 0)], marker_color='salmon'))
-        fig_validation.add_trace(go.Bar(name='Function Checked', x=['Function'], y=[function_counts.get('Checked', 0)], marker_color='lightgreen'))
-        fig_validation.add_trace(go.Bar(name='Function Unchecked', x=['Function'], y=[function_counts.get('Unchecked', 0)], marker_color='salmon'))
-        fig_validation.add_trace(go.Bar(name='EMC Checked', x=['EMC'], y=[emc_counts.get('Checked', 0)], marker_color='lightgreen'))
-        fig_validation.add_trace(go.Bar(name='EMC Unchecked', x=['EMC'], y=[emc_counts.get('Unchecked', 0)], marker_color='salmon'))
-
-        fig_validation.update_layout(
-            title="Validation Summary",
-            barmode='group',
-            xaxis_title="Category",
-            yaxis_title="Validation Counts",
-            width=800,
-            height=500
-        )
-
         # Homologation status chart
         homo_counts = df['Homologated'].value_counts()
         fig_homologation = go.Figure(data=[
@@ -149,22 +131,21 @@ class ValidationTracker:
         # Layout: Two columns
         col1, col2 = st.columns(2)
         with col1:
-            st.plotly_chart(fig_validation, use_container_width=True)
-        with col2:
             st.plotly_chart(fig_homologation, use_container_width=True)
 
         # Homologation Status by Product (Stacked Bar Chart)
-        st.subheader("Homologation Status by Product")
-        product_status = df.groupby(['Product', 'Homologated']).size().reset_index(name='Count')
-        fig_stacked = px.bar(
-            product_status,
-            x='Product',
-            y='Count',
-            color='Homologated',
-            title="Homologation Status by Product",
-            barmode='stack'
-        )
-        st.plotly_chart(fig_stacked, use_container_width=True)
+        with col2:
+            st.subheader("Homologation Status by Product")
+            product_status = df.groupby(['Product', 'Homologated']).size().reset_index(name='Count')
+            fig_stacked = px.bar(
+                product_status,
+                x='Product',
+                y='Count',
+                color='Homologated',
+                title="Homologation Status by Product",
+                barmode='stack'
+            )
+            st.plotly_chart(fig_stacked, use_container_width=True)
 
 
 def project_tracker():
@@ -201,16 +182,9 @@ def project_tracker():
 
         but1, but2, info1, info2 = st.columns(4)
         edited_data = tracker.display_editor(df) 
-
         with but1:
-            if st.button("💾 **Save Changes**", type="primary"):
-                # Use the 'edited_data' DataFrame for saving
-                if isinstance(edited_data, pd.DataFrame) and not edited_data.empty:
-                    tracker.save_changes(edited_data) 
-                    st.rerun() 
-                else:
-                    st.error("Error: Cannot save empty data or invalid data type.")
-        
+            tracker.save_changes(edited_data)
+
         with but2:
             tracker.download_backup(edited_data) 
         with info1:

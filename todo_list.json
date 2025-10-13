@@ -13,5 +13,25 @@
     "task": "Homologation Inductor 2025-160",
     "priority": "Low",
     "due_date": "2025-10-17"
+  },
+  {
+    "task": "Finish report 2025-151_46000012",
+    "priority": "High",
+    "due_date": "2025-10-09"
+  },
+  {
+    "task": "Finish report 2025-146_87120045 CRS-1000",
+    "priority": "High",
+    "due_date": "2025-10-09"
+  },
+  {
+    "task": "Finish report 2025-146.2_87120045 CRS-1000",
+    "priority": "High",
+    "due_date": "2025-10-09"
+  },
+  {
+    "task": "Automated Validation Fixture with NUCLEO",
+    "priority": "Medium",
+    "due_date": "2025-10-30"
   }
 ]
