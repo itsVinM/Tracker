@@ -177,12 +177,8 @@ def project_tracker():
             total = len(df)
             passed = len(df[df["Homologated"] == "✅ PASSED"])
             progress_ratio = passed / total if total > 0 else 0
-            col1, col2 = st.columns(2)
-            with col1:
-                st.metric("Total Validations", total)
-                st.metric("Passed Validations", passed)
-            with col2:
-                st.progress(progress_ratio)
+            st.metric("Total Validations {}, Passed {}", total , passed)
+            st.progress(progress_ratio)
 
         with col_homologation:
             homologated_filter = st.multiselect(
