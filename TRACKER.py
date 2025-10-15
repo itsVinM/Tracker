@@ -176,11 +176,15 @@ def project_tracker():
             # --- Progress Indicator ---
             total = len(df)
             passed = len(df[df["Homologated"] == "✅ PASSED"])
+            failed = len(df[df["Homologated"] == "❌ FAILED"])
+            function_emc_sum = (df["Function"] | df["EMC"]).sum()
             progress_ratio = passed / total if total > 0 else 0
-            col1, col2=st.columns(2)
+            col1, col2, col3=st.columns(3)
             with col1:
-                st.metric("Total Validations ", total , passed)
+                st.metric(f"Total & passed", total , passed)
             with col2:
+                st.metric(label="Function or EMC Checked", value=function_emc_sum, failed)
+            with col3:
                 st.progress(progress_ratio)
 
         with col_homologation:
