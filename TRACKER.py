@@ -154,7 +154,7 @@ def project_tracker():
 
     with tab1:
         st.subheader("Validation Tracker - Project Status")
-        but1, but2 = st.columns(4)
+        but1, but2 = st.columns(2)
         col_request, col_product, col_component, col_homologation, col_progress = st.columns(5)
         
         with col_request:
