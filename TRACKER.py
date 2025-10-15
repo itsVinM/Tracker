@@ -154,7 +154,7 @@ def project_tracker():
 
     with tab1:
         st.subheader("Validation Tracker - Project Status")
-        but1, but2,info1, info2,  = st.columns(4)
+        but1, but2 = st.columns(4)
         col_request, col_product, col_component, col_homologation, col_progress = st.columns(5)
         
         with col_request:
@@ -202,10 +202,7 @@ def project_tracker():
 
         with but2:
             tracker.download_backup(edited_data) 
-        with info1:
-            st.info(f"Displaying **{len(df)}** projects out of **{len(tracker.data)}**")
-        with info2:
-            st.info(f"EMC compulsory for semiconductors, L & C")
+
     with tab2:
         tracker.display_charts()
         
