@@ -154,7 +154,7 @@ def project_tracker():
     with tab1:
         st.subheader("Validation Tracker - Project Status")
         but1, but2,info1, info2,  = st.columns(4)
-        col_request, col_product, col_homologation, col_progress = st.columns(4)
+        col_request, col_product, col_component, col_homologation, col_progress = st.columns(5)
         
         with col_request:
             request_search = st.text_input("Search Request ID", key="tab_request_search")
@@ -165,6 +165,12 @@ def project_tracker():
             product_search = st.text_input("Search Product (Used)", key="tab_product_search")
             if product_search:
                 df = df[df['Product'].astype(str).str.contains(product_search, case=False, na=False)]
+
+        with col_component:
+            component_search = st.text_input("Search New Component", key="tab_new_component_search")
+            if component_search:
+                df = df[df['New'].astype(str).str.contains(component_search, case=False, na=False)]
+
         with col_progress:
             # --- Progress Indicator ---
             total = len(df)
