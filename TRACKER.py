@@ -177,7 +177,9 @@ def project_tracker():
             with metric2:
                 st.metric(f"Total & Failed", total , -failed)
             with metric3:
-                st.metric(f"Miss & Ongoing", value=missing, delta= function_emc, chart_data=df[df["Homologated"] == "🛠️FUNCTION"],chart_type="bar")
+                st.metric(f"Miss & Ongoing", value=missing, delta= function_emc)
+
+
         
     with tab2:
         todo = TodoManager() 
