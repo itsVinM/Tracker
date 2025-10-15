@@ -124,7 +124,7 @@ def project_tracker():
 
     with tab1:
         st.subheader("Validation Tracker - Project Status")
-        but1, but2 = st.columns(2)
+        but1, but2,col1, col2, col3 = st.columns(5)
         col_request, col_product, col_component, col_homologation = st.columns(4)
         
         with col_request:
@@ -147,16 +147,16 @@ def project_tracker():
         total = len(df)
         passed = len(df[df["Homologated"] == "✅ PASSED"])
         failed = len(df[df["Homologated"] == "❌ FAILED"])
-        function_emc_sum = (df["Function"] | df["EMC"]).sum()
-        missing= total-function_emc_sum
+        function_emc = (df["Function"] | df["EMC"]).sum()
+        missing= total-passed-failed
 
-        col1, col2, col3=st.columns(3)
+
         with col1:
             st.metric(f"Total & passed", total , passed)
         with col2:
             st.metric(f"Total & failed", total , -failed)
         with col3:
-            st.metric(label="Miss & validated", value=missing, delta= df["Function"].sum())
+            st.metric(label="Ongoing", value=missing, delta= function_emc)
 
 
         with col_homologation:
