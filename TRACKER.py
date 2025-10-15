@@ -124,7 +124,9 @@ def project_tracker():
 
     with tab1:
         st.subheader("Validation Tracker - Project Status")
-        but1, but2,metric1, metric2, metric3, metric4 = st.columns(6)
+        but1, but2 = st.columns(2)
+        metric1, metric2, metric3, metric4, metric5, metric6= st.columns(6)
+        
         col_request, col_product, col_component, col_homologation = st.columns(4)
         
         with col_request:
@@ -175,15 +177,18 @@ def project_tracker():
 
         missing = total - passed - failed
 
-        with st.container():
-            with metric1:
-                st.metric("Total & Passed", value=total, delta=passed)
-            with metric2:
-                st.metric("Total & Failed", value=total, delta=-failed)
-            with metric3:
-                st.metric("Awaiting", value=total, delta=awaitingRD)
-            with metric4:
-                st.metric("Miss & Ongoing", value=missing, delta=function_emc)
+        with metric1:
+                st.metric("Total Request", value="", delta=total)
+        with metric2:
+                st.metric("Passed Request", value="", delta=passed)
+        with metric3:
+                st.metric("Failed Request", value="", delta=-failed)
+        with metric4:
+                st.metric("Awaiting R&D", value="", delta=-awaitingRD)
+        with metric5:
+                st.metric("Missing Request", value="" ,delta= -missing)
+        with metric6:
+                st.metric("Ongoing Request", value="", delta=function_emc)
 
 
         
