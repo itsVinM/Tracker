@@ -51,8 +51,6 @@ class ValidationTracker:
         if 'Product_ID' in data.columns:
             data['Product_ID'] = data['Product_ID'].astype(str)
         
-        data["Progress"] = data["Homologated"].apply(self.generate_progress_bar_text)
-        
         return data 
     
 
