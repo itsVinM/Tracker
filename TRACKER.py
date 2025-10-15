@@ -177,23 +177,7 @@ def project_tracker():
             with metric2:
                 st.metric(f"Total & Failed", total , -failed)
             with metric3:
-                st.metric(f"Miss & Ongoing", value=missing, delta= function_emc)
-            
-            with metric4:
-                # Bar chart of all statuses
-                chart_data = pd.DataFrame({
-                    "Status": status_counts.index,
-                    "Count": status_counts.values
-                })
-
-                fig = px.bar(chart_data, x="Status", y="Count", text="Count",
-                            title="Homologation Status Distribution")
-                fig.update_traces(textposition='outside')
-                fig.update_layout(yaxis_title="Count", xaxis_title="Status", height=500)
-
-                st.plotly_chart(fig, use_container_width=True)
-
-
+                st.metric(f"Miss & Ongoing", value=missing, delta= function_emc, chart_data=df[df["Homologated"] == "🛠️FUNCTION"],chart_type="bar")
         
     with tab2:
         todo = TodoManager() 
