@@ -51,7 +51,10 @@ class ValidationTracker:
         if 'Product_ID' in data.columns:
             data['Product_ID'] = data['Product_ID'].astype(str)
         
-        return data
+        data["Progress"] = data["Homologated"].apply(self.generate_progress_bar_text)
+        
+        return data 
+    
 
 
     def get_column_config(self) -> Dict[str, st.column_config.Column]:
@@ -71,7 +74,7 @@ class ValidationTracker:
             "Product": st.column_config.TextColumn("Product", disabled=False),
             "Position": st.column_config.TextColumn("Position", disabled=False),
             "New": st.column_config.TextColumn("New", disabled=False),
-              "Reference": st.column_config.TextColumn("Reference", disabled=False),
+            "Reference": st.column_config.TextColumn("Reference", disabled=False),
             
             "Product_ID": st.column_config.Column(disabled=True, width="off"), 
         }
