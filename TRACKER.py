@@ -116,56 +116,40 @@ class ValidationTracker:
     def display_charts(self):
         df = self.data
 
-        # --- Homologation Summary ---
-        homologated_count = df['Homologated'].sum()
-        total_count = len(df)
-        progress = int((homologated_count / total_count) * 100)
+        # --- Existing Charts ---
+        datasheet_counts = df['Datasheet'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
+        function_counts = df['Function'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
+        emc_counts = df['EMC'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
 
-        st.subheader("Overall Homologation Progress")
-        st.write(f"Homologation Progress: {progress}%")
-        st.progress(progress)
-
-        # --- Homologation by Product ---
-        product_status = df.groupby(['Product', 'Homologated']).size().unstack(fill_value=0)
-        product_status['Total'] = product_status.sum(axis=1)
-        product_status['Progress'] = product_status[True] / product_status['Total'] * 100
-        product_status['ProgressBar'] = product_status['Progress'].apply(
-            lambda x: '█' * int(x // 10) + '░' * (10 - int(x // 10))
-        )
-
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.subheader("Homologation Progress by Product")
-            fig_progress = px.bar(
-                product_status.reset_index(),
-                x='Product',
-                y='Progress',
-                title='Homologation Progress by Product',
-                labels={'Progress': 'Homologation %'},
-                color='Progress',
-                color_continuous_scale='Blues'
-            )
-            st.plotly_chart(fig_progress, use_container_width=True)
-
-        with col2:
-            st.subheader("Progress Table")
-            st.data_editor(product_status[['Progress', 'ProgressBar']], num_rows="dynamic")
-
-        # --- Optional: Pie Chart for Homologation Status ---
         homo_counts = df['Homologated'].value_counts()
         fig_homologation = go.Figure(data=[
             go.Pie(labels=homo_counts.index, values=homo_counts.values, hole=0.3)
         ])
         fig_homologation.update_layout(title="Homologation Status", height=500)
-        st.plotly_chart(fig_homologation, use_container_width=True)
+
+        col1, col2 = st.columns(2)
+        with col1:
+            st.plotly_chart(fig_homologation, use_container_width=True)
+
+        with col2:
+            st.subheader("Homologation Status by Product")
+            product_status = df.groupby(['Product', 'Homologated']).size().reset_index(name='Count')
+            fig_stacked = px.bar(
+                product_status,
+                x='Product',
+                y='Count',
+                color='Homologated',
+                title="Homologation Status by Product",
+                barmode='stack'
+            )
+            st.plotly_chart(fig_stacked, use_container_width=True)
 
 
 def project_tracker():
     tracker = ValidationTracker()
     df = tracker.data 
     
-    tab1, tab2, tab3 = st.tabs(["📋 Validation Request", "📥 Todo!"])
+    tab1, tab2, tab3 = st.tabs(["📋 Validation Request", "📈 Visual Summary", "📥 Todo!"])
 
     with tab1:
         st.subheader("Validation Tracker - Project Status")
@@ -185,7 +169,7 @@ def project_tracker():
         with col_component:
             component_search = st.text_input("Search New Component", key="tab_new_component_search")
             if component_search:
-                df = df[df['New'].astype(str).str.contains(component_search, case=False, na=False)]
+                df = df[df['Product'].astype(str).str.contains(component_search, case=False, na=False)]
 
         with col_progress:
             # --- Progress Indicator ---
@@ -221,9 +205,10 @@ def project_tracker():
             st.info(f"Displaying **{len(df)}** projects out of **{len(tracker.data)}**")
         with info2:
             st.info(f"EMC compulsory for semiconductors, L & C")
-    tracker.display_charts()
-        
     with tab2:
+        tracker.display_charts()
+        
+    with tab3:
         todo = TodoManager() 
         with st.expander("Add task"):
             todo.add_task()
