@@ -112,7 +112,6 @@ class TodoManager:
                             }
                             self.save_todo(todos)
                             st.success("Task updated successfully!")
-                            st.experimental_rerun()
 
                         if st.button("❌ Delete Task", key=f"delete_{i}"):
                             todos.pop(i)
