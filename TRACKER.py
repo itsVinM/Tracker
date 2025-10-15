@@ -153,8 +153,8 @@ def project_tracker():
 
     with tab1:
         st.subheader("Validation Tracker - Project Status")
-        but1, but2 = st.columns(2)
-        col_request, col_product, col_homologation, info1, info2, col_progress = st.columns(6)
+        but1, but2,info1, info2,  = st.columns(4)
+        col_request, col_product, col_homologation, col_progress = st.columns(4)
         
         with col_request:
             request_search = st.text_input("Search Request ID", key="tab_request_search")
