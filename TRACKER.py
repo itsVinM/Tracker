@@ -176,8 +176,9 @@ def project_tracker():
             # --- Progress Indicator ---
             total = len(df)
             passed = len(df[df["Homologated"] == "✅ PASSED"])
+            failed = len(df[df["Homologated"] == "❌ FAILED"])
             progress_ratio = passed / total if total > 0 else 0
-            st.metric("Total Validations {}, Passed {}", total , passed)
+            st.metric("Total Validations ", total , passed, failed)
             st.progress(progress_ratio)
 
         with col_homologation:
