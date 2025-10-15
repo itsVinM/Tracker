@@ -116,24 +116,30 @@ class ValidationTracker:
     def display_charts(self):
         df = self.data
 
-        # Count Checked and Unchecked for each category
+        # --- Progress Indicator ---
+        total = len(df)
+        passed = len(df[df["Homologated"] == "✅ PASSED"])
+        progress_ratio = passed / total if total > 0 else 0
+
+        st.metric("Total Validations", total)
+        st.metric("Passed Validations", passed)
+        st.progress(progress_ratio)
+
+        # --- Existing Charts ---
         datasheet_counts = df['Datasheet'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
         function_counts = df['Function'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
         emc_counts = df['EMC'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
 
-        # Homologation status chart
         homo_counts = df['Homologated'].value_counts()
         fig_homologation = go.Figure(data=[
             go.Pie(labels=homo_counts.index, values=homo_counts.values, hole=0.3)
         ])
         fig_homologation.update_layout(title="Homologation Status", height=500)
 
-        # Layout: Two columns
         col1, col2 = st.columns(2)
         with col1:
             st.plotly_chart(fig_homologation, use_container_width=True)
 
-        # Homologation Status by Product (Stacked Bar Chart)
         with col2:
             st.subheader("Homologation Status by Product")
             product_status = df.groupby(['Product', 'Homologated']).size().reset_index(name='Count')
