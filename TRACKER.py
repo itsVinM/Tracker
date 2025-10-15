@@ -167,7 +167,6 @@ def project_tracker():
         total = len(df)
         passed = len(df[df["Homologated"] == "✅ PASSED"])
         failed = len(df[df["Homologated"] == "❌ FAILED"])
-        awaitRD=failed = len(df[df["Homologated"] == "❌ FAILED"])
         function_emc = (df["Function"] | df["EMC"]).sum()
         missing= total-passed-failed
 
