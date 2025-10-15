@@ -163,20 +163,27 @@ def project_tracker():
             tracker.download_backup(edited_data) 
 
         # --- Progress Indicator ---
-        status_counts = df["Homologated"].value_counts()
         total = len(df)
         passed = len(df[df["Homologated"] == "✅ PASSED"])
         failed = len(df[df["Homologated"] == "❌ FAILED"])
-        function_emc = (df["Function"] | df["EMC"]).sum()
-        missing= total-passed-failed
+        awaitingRD = len(df[df["Homologated"] == "⏳AWAIT R&D"])
+
+        # Count entries with FUNCTION or EMC status
+        function_emc = len(df[df["Homologated"].isin([
+            "🛠️FUNCTION", "📡 EMC RADIATED", "⚡ EMC CONDUCTED"
+        ])])
+
+        missing = total - passed - failed
 
         with st.container():
             with metric1:
-                st.metric(f"Total & Passed", total , passed)
+                st.metric("Total & Passed", value=total, delta=passed)
             with metric2:
-                st.metric(f"Total & Failed", total , -failed)
+                st.metric("Total & Failed", value=total, delta=-failed)
             with metric3:
-                st.metric(f"Miss & Ongoing", value=missing, delta= function_emc)
+                st.metric("Awaiting", value=total, delta=awaitingRD)
+            with metric4:
+                st.metric("Miss & Ongoing", value=missing, delta=function_emc)
 
 
         
