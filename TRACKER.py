@@ -170,7 +170,7 @@ def project_tracker():
         with col_component:
             component_search = st.text_input("Search New Component", key="tab_new_component_search")
             if component_search:
-                df = df[df['Product'].astype(str).str.contains(component_search, case=False, na=False)]
+                df = df[df['New'].astype(str).str.contains(component_search, case=False, na=False)]
 
         with col_progress:
             # --- Progress Indicator ---
