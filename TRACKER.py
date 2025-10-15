@@ -116,15 +116,6 @@ class ValidationTracker:
     def display_charts(self):
         df = self.data
 
-        # --- Progress Indicator ---
-        total = len(df)
-        passed = len(df[df["Homologated"] == "✅ PASSED"])
-        progress_ratio = passed / total if total > 0 else 0
-
-        st.metric("Total Validations", total)
-        st.metric("Passed Validations", passed)
-        st.progress(progress_ratio)
-
         # --- Existing Charts ---
         datasheet_counts = df['Datasheet'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
         function_counts = df['Function'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
@@ -163,7 +154,7 @@ def project_tracker():
     with tab1:
         st.subheader("Validation Tracker - Project Status")
 
-        col_request, col_product, col_homologation = st.columns(3)
+        col_request, col_product, col_homologation, col_progress = st.columns(4)
         
         with col_request:
             request_search = st.text_input("Search Request ID", key="tab_request_search")
@@ -174,7 +165,18 @@ def project_tracker():
             product_search = st.text_input("Search Product (Used)", key="tab_product_search")
             if product_search:
                 df = df[df['Product'].astype(str).str.contains(product_search, case=False, na=False)]
-        
+        with col_progress:
+            # --- Progress Indicator ---
+            total = len(df)
+            passed = len(df[df["Homologated"] == "✅ PASSED"])
+            progress_ratio = passed / total if total > 0 else 0
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("Total Validations", total)
+            with col2:
+                st.metric("Passed Validations", passed)
+            st.progress(progress_ratio)
+
         with col_homologation:
             homologated_filter = st.multiselect(
                 "Filter by Homologation Status",
