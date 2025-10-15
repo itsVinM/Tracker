@@ -118,4 +118,4 @@ class TodoManager:
                             todos.pop(i)
                             self.save_todo(todos)
                             st.warning("Task deleted.")
-                            st.experimental_rerun()
+                            
