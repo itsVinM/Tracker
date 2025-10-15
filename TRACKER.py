@@ -124,7 +124,7 @@ def project_tracker():
 
     with tab1:
         st.subheader("Validation Tracker - Project Status")
-        but1, but2,col1, col2, col3 = st.columns(5)
+        but1, but2,metric1, metric2, metric3, metric4 = st.columns(6)
         col_request, col_product, col_component, col_homologation = st.columns(4)
         
         with col_request:
@@ -141,22 +141,6 @@ def project_tracker():
             component_search = st.text_input("Search New Component", key="tab_new_component_search")
             if component_search:
                 df = df[df['New'].astype(str).str.contains(component_search, case=False, na=False)]
-
-        
-        # --- Progress Indicator ---
-        total = len(df)
-        passed = len(df[df["Homologated"] == "✅ PASSED"])
-        failed = len(df[df["Homologated"] == "❌ FAILED"])
-        function_emc = (df["Function"] | df["EMC"]).sum()
-        missing= total-passed-failed
-
-
-        with col1:
-            st.metric(f"Total & passed", total , passed)
-        with col2:
-            st.metric(f"Total & failed", total , -failed)
-        with col3:
-            st.metric(label="Ongoing", value=missing, delta= function_emc)
 
 
         with col_homologation:
@@ -177,6 +161,39 @@ def project_tracker():
 
         with but2:
             tracker.download_backup(edited_data) 
+
+        # --- Progress Indicator ---
+        status_counts = df["Homologated"].value_counts()
+        total = len(df)
+        passed = len(df[df["Homologated"] == "✅ PASSED"])
+        failed = len(df[df["Homologated"] == "❌ FAILED"])
+        awaitRD=failed = len(df[df["Homologated"] == "❌ FAILED"])
+        function_emc = (df["Function"] | df["EMC"]).sum()
+        missing= total-passed-failed
+
+        with st.container():
+            with metric1:
+                st.metric(f"Total & Passed", total , passed)
+            with metric2:
+                st.metric(f"Total & Failed", total , -failed)
+            with metric3:
+                st.metric(f"Miss & Ongoing", value=missing, delta= function_emc)
+            
+            with metric4:
+                # Bar chart of all statuses
+                chart_data = pd.DataFrame({
+                    "Status": status_counts.index,
+                    "Count": status_counts.values
+                })
+
+                fig = px.bar(chart_data, x="Status", y="Count", text="Count",
+                            title="Homologation Status Distribution")
+                fig.update_traces(textposition='outside')
+                fig.update_layout(yaxis_title="Count", xaxis_title="Status", height=500)
+
+                st.plotly_chart(fig, use_container_width=True)
+
+
         
     with tab2:
         todo = TodoManager() 
