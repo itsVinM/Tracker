@@ -114,48 +114,18 @@ class ValidationTracker:
             file_name=f"Backup_Project_Tracker_{today}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
-    def display_charts(self):
-        df = self.data
-
-        # --- Existing Charts ---
-        datasheet_counts = df['Datasheet'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
-        function_counts = df['Function'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
-        emc_counts = df['EMC'].value_counts().rename({True: 'Checked', False: 'Unchecked'})
-
-        homo_counts = df['Homologated'].value_counts()
-        fig_homologation = go.Figure(data=[
-            go.Pie(labels=homo_counts.index, values=homo_counts.values, hole=0.3)
-        ])
-        fig_homologation.update_layout(title="Homologation Status", height=500)
-
-        col1, col2 = st.columns(2)
-        with col1:
-            st.plotly_chart(fig_homologation, use_container_width=True)
-
-        with col2:
-            st.subheader("Homologation Status by Product")
-            product_status = df.groupby(['Product', 'Homologated']).size().reset_index(name='Count')
-            fig_stacked = px.bar(
-                product_status,
-                x='Product',
-                y='Count',
-                color='Homologated',
-                title="Homologation Status by Product",
-                barmode='stack'
-            )
-            st.plotly_chart(fig_stacked, use_container_width=True)
 
 
 def project_tracker():
     tracker = ValidationTracker()
     df = tracker.data 
     
-    tab1, tab2, tab3 = st.tabs(["📋 Validation Request", "📈 Visual Summary", "📥 Todo!"])
+    tab1, tab2 = st.tabs(["📋 Validation Request","📥 Todo!"])
 
     with tab1:
         st.subheader("Validation Tracker - Project Status")
         but1, but2 = st.columns(2)
-        col_request, col_product, col_component, col_homologation, col_progress = st.columns(5)
+        col_request, col_product, col_component, col_homologation = st.columns(4)
         
         with col_request:
             request_search = st.text_input("Search Request ID", key="tab_request_search")
@@ -172,20 +142,20 @@ def project_tracker():
             if component_search:
                 df = df[df['New'].astype(str).str.contains(component_search, case=False, na=False)]
 
-        with col_progress:
-            # --- Progress Indicator ---
-            total = len(df)
-            passed = len(df[df["Homologated"] == "✅ PASSED"])
-            failed = len(df[df["Homologated"] == "❌ FAILED"])
-            function_emc_sum = (df["Function"] | df["EMC"]).sum()
-            progress_ratio = passed / total if total > 0 else 0
-            col1, col2, col3=st.columns(3)
-            with col1:
-                st.metric(f"Total & passed", total , passed)
-            with col2:
-                st.metric(label="Validated & fail", value=function_emc_sum, delta= -failed)
-            with col3:
-                st.progress(progress_ratio)
+        
+        # --- Progress Indicator ---
+        total = len(df)
+        passed = len(df[df["Homologated"] == "✅ PASSED"])
+        failed = len(df[df["Homologated"] == "❌ FAILED"])
+        function_emc_sum = (df["Function"] | df["EMC"]).sum()
+        progress_ratio = passed / total if total > 0 else 0
+        col1, col2, col3=st.columns(3)
+        with col1:
+            st.metric(f"Total & passed", total , passed)
+        with col2:
+            st.metric(label="Validated & fail", value=function_emc_sum, delta= -failed)
+        with col3:
+            st.progress("Progress {progress_ratio}", progress_ratio)
 
         with col_homologation:
             homologated_filter = st.multiselect(
@@ -205,11 +175,8 @@ def project_tracker():
 
         with but2:
             tracker.download_backup(edited_data) 
-
-    with tab2:
-        tracker.display_charts()
         
-    with tab3:
+    with tab2:
         todo = TodoManager() 
         with st.expander("Add task"):
             todo.add_task()
