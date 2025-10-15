@@ -149,12 +149,12 @@ def project_tracker():
     tracker = ValidationTracker()
     df = tracker.data 
     
-    tab1, tab2, tab3, tab4 = st.tabs(["📋 Validation Request", "📈 Visual Summary", "📥 Todo!", "🤖 Automated Validation"])
+    tab1, tab2, tab3 = st.tabs(["📋 Validation Request", "📈 Visual Summary", "📥 Todo!"])
 
     with tab1:
         st.subheader("Validation Tracker - Project Status")
-
-        col_request, col_product, col_homologation, col_progress = st.columns(4)
+        but1, but2 = st.columns(2)
+        col_request, col_product, col_homologation, info1, info2, col_progress = st.columns(6)
         
         with col_request:
             request_search = st.text_input("Search Request ID", key="tab_request_search")
@@ -188,7 +188,6 @@ def project_tracker():
                 df = df[df['Homologated'].isin(homologated_filter)]
 
 
-        but1, but2, info1, info2 = st.columns(4)
         edited_data = tracker.display_editor(df) 
         with but1:
             if st.button("📋 Save changes"):
