@@ -180,9 +180,9 @@ def project_tracker():
             col1, col2 = st.columns(2)
             with col1:
                 st.metric("Total Validations", total)
-            with col2:
                 st.metric("Passed Validations", passed)
-            st.progress(progress_ratio)
+            with col2:
+                st.progress(progress_ratio)
 
         with col_homologation:
             homologated_filter = st.multiselect(
