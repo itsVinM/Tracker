@@ -183,7 +183,7 @@ def project_tracker():
             with col1:
                 st.metric(f"Total & passed", total , passed)
             with col2:
-                st.metric(label="Function or EMC Checked", value=function_emc_sum, failed)
+                st.metric(label="Validated & fail", value=function_emc_sum, delta= -failed)
             with col3:
                 st.progress(progress_ratio)
 
