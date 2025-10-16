@@ -189,7 +189,7 @@ def project_tracker():
         with metric5:
                 st.metric("Missing Request", value="" ,delta= -missing)
         with metric6:
-                st.metric("Ongoing Request", value="", delta=-factory)
+                st.metric("Factory Test", value="", delta=-factory)
         with metric7:
                 st.metric("Ongoing Request", value="", delta=function_emc)
         
