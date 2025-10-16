@@ -26,7 +26,7 @@ class ValidationTracker:
         "🛠️FUNCTION", 
         "📡 EMC RADIATED", 
         "⚡ EMC CONDUCTED",
-        "⚙️ FACTORY - EVA"
+        "⚙️ FACTORY - EVA",
         "❌ FAILED", 
         "✅ PASSED" 
     ]
