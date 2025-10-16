@@ -35,7 +35,6 @@ class TodoManager:
             json.dump(todos, f, indent=2)
 
     def add_task(self):
-        st.header("➕ Add New Task")
         new_task = st.text_input("Enter a new task")
         priority = st.selectbox("Select priority", self.PRIORITY_LEVELS)
         due_date = st.date_input("Select due date", value=datetime.today())
@@ -56,7 +55,6 @@ class TodoManager:
                 st.warning("Please enter a valid task.")
 
     def display_calendar(self):
-        st.header("📅 Task Calendar")
         todos = self.load_todo()
         if not todos:
             st.info("No tasks scheduled.")
