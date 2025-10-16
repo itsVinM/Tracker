@@ -177,7 +177,7 @@ def project_tracker():
             "🛠️FUNCTION", "📡 EMC RADIATED", "⚡ EMC CONDUCTED"
         ])])
 
-        missing = total - passed - failed - awaitingRD - factory
+        missing = total - passed - failed - awaitingRD - factory - function_emc
 
         with metric1:
                 st.metric("Total Request", value="", delta=total, delta_color="off")
