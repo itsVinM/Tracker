@@ -180,7 +180,7 @@ def project_tracker():
         missing = total - passed - failed - awaitingRD - factory
 
         with metric1:
-                st.metric("Total Request", value="", delta=total)
+                st.metric("Total Request", value="", delta=total, delta_color="off")
         with metric2:
                 st.metric("Passed Request", value="", delta=passed)
         with metric3:
@@ -188,9 +188,10 @@ def project_tracker():
         with metric4:
                 st.metric("Awaiting R&D", value="", delta=-awaitingRD)
         with metric5:
-                st.metric("Missing Request", value="" ,delta= -missing)
-        with metric6:
                 st.metric("Factory Test", value="", delta=-factory)
+                
+        with metric6:
+                st.metric("Missing Request", value="" ,delta= missing, delta_color="off")
         with metric7:
                 st.metric("Ongoing Request", value="", delta=function_emc)
         
