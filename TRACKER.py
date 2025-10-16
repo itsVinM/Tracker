@@ -120,10 +120,9 @@ def project_tracker():
     tracker = ValidationTracker()
     df = tracker.data 
     
-    tab1, tab2 = st.tabs(["📋 Validation Request","📥 Todo!"])
+    tab1, tab2 = st.tabs(["📋 Validation Status","📥 Todo!"])
 
     with tab1:
-        st.subheader("Validation Tracker - Project Status")
         but1, but2 = st.columns(2)
         metric1, metric2, metric3, metric4, metric5, metric6= st.columns(6)
         
