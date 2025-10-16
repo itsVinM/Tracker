@@ -125,7 +125,7 @@ def project_tracker():
 
     with tab1:
         but1, but2 = st.columns(2)
-        metric1, metric2, metric3, metric4, metric5, metric6= st.columns(6)
+        metric1, metric2, metric3, metric4, metric5, metric6, metric7= st.columns(6)
         
         col_request, col_product, col_component, col_homologation = st.columns(4)
         
@@ -169,6 +169,7 @@ def project_tracker():
         passed = len(df[df["Homologated"] == "✅ PASSED"])
         failed = len(df[df["Homologated"] == "❌ FAILED"])
         awaitingRD = len(df[df["Homologated"] == "⏳AWAIT R&D"])
+        factory=len(df[df["Homologated"] == "⚙️ FACTORY - EVA"])
 
         # Count entries with FUNCTION or EMC status
         function_emc = len(df[df["Homologated"].isin([
@@ -188,7 +189,10 @@ def project_tracker():
         with metric5:
                 st.metric("Missing Request", value="" ,delta= -missing)
         with metric6:
+                st.metric("Ongoing Request", value="", delta=-factory)
+        with metric7:
                 st.metric("Ongoing Request", value="", delta=function_emc)
+        
 
 
         
