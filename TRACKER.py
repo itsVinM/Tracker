@@ -100,7 +100,7 @@ class ValidationTracker:
         left_cols = [col for col in left_cols if col in df.columns]
         right_cols = [col for col in right_cols if col in df.columns]
 
-        col1, col2 = st.columns([1, 2], widtg="strech")
+        col1, col2 = st.columns([1, 2], width="stretch")
 
         with col1:
             st.subheader("📌 Tracker Overview")
