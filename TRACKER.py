@@ -100,7 +100,7 @@ class ValidationTracker:
         left_cols = [col for col in left_cols if col in df.columns]
         right_cols = [col for col in right_cols if col in df.columns]
 
-        show_details = st.checkbox("Show detailed columns", value=True)
+        show_details = st.checkbox("Show detailed columns", value=False)
 
         if show_details:
             col1, col2 = st.columns([1, 2])
