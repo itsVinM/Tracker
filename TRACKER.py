@@ -13,7 +13,7 @@ import plotly.express as px
 from database import *
 from todolist import *
 st.set_page_config(
-    page_title="PRODUCT ENGINEERING - VALIDATION",
+    page_title="VALIDATION",
     layout="wide",
 )
 # --- Validation Tracker Class ---
