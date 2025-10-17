@@ -51,9 +51,15 @@ class ValidationTracker:
         if 'Product_ID' in data.columns:
             data['Product_ID'] = data['Product_ID'].astype(str)
 
-        # Add Priority column if missing
+        # Add missing columns with default values
         if 'Priority' not in data.columns:
-            data['Priority'] = "🟢 Low"  # Default value
+            data['Priority'] = "🟢 Low"
+        if 'Start_Date' not in data.columns:
+            data['Start_Date'] = pd.to_datetime("today").normalize()
+        if 'End_Date' not in data.columns:
+            data['End_Date'] = pd.to_datetime("today").normalize()
+        if 'Progress' not in data.columns:
+            data['Progress'] = 0.0  # Progress as float between 0 and 1
 
         return data
 
@@ -70,6 +76,9 @@ class ValidationTracker:
                 options=self.PRIORITY_OPTIONS,
                 width="small"
             ),
+            "Start_Date": st.column_config.DateColumn("Start Date"),
+            "End_Date": st.column_config.DateColumn("End Date"),
+            "Progress": st.column_config.ProgressColumn("Progress", min_value=0.0, max_value=1.0, format="%.0f%%"),
             "Note": st.column_config.TextColumn("Note", disabled=False),
             "Current": st.column_config.TextColumn("Current", disabled=False),
             "Product": st.column_config.TextColumn("Product", disabled=False),
@@ -113,6 +122,7 @@ class ValidationTracker:
             file_name=f"Backup_Project_Tracker_{today}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
+
 
 def project_tracker():
     tracker = ValidationTracker()
