@@ -34,6 +34,7 @@ class ValidationTracker:
 
     # --- Priority Options with Emojis ---
     PRIORITY_OPTIONS = [
+        "🔔 Urgent",
         "🔴 High",
         "🟡 Medium",
         "🟢 Low"
