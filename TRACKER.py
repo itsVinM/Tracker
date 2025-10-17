@@ -16,9 +16,9 @@ st.set_page_config(
     page_title="VALIDATION",
     layout="wide",
 )
-# --- Validation Tracker Class ---
+
 class ValidationTracker:
-    # --- Defined Homologation Options (Updated as requested) ---
+    # --- Defined Homologation Options ---
     HOMOLOGATION_OPTIONS = [
         "⏳AWAIT R&D", 
         "🆘PRODUCT N/A", 
@@ -89,14 +89,36 @@ class ValidationTracker:
         }
 
     def display_editor(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Displays the data editor with the current (potentially filtered) data."""
-        return st.data_editor(
-            df,
-            hide_index=True,
-            num_rows="dynamic",
-            column_config=self.get_column_config(),
-            key="validation_data_editor"
-        )
+        """Displays the data editor split into two synchronized views."""
+        left_cols = ["Request", "Priority", "Homologated", "Start_Date", "End_Date", "Progress"]
+        right_cols = ["Note", "Current", "Product", "Position", "New", "Reference"]
+
+        col1, col2 = st.columns([1, 2])
+
+        with col1:
+            st.subheader("📌 Tracker Overview")
+            edited_left = st.data_editor(
+                df[left_cols],
+                column_config={col: self.column_config[col] for col in left_cols},
+                hide_index=True,
+                num_rows="dynamic",
+                key="editor_left"
+            )
+
+        with col2:
+            st.subheader("📄 Details")
+            edited_right = st.data_editor(
+                df[right_cols],
+                column_config={col: self.column_config[col] for col in right_cols},
+                hide_index=True,
+                num_rows="dynamic",
+                key="editor_right"
+            )
+
+        # Merge edited data back together
+        edited_df = pd.concat([edited_left, edited_right], axis=1)
+
+        return edited_df
 
     def save_changes(self, edited_data: pd.DataFrame):
         update_data(edited_data)
@@ -106,7 +128,6 @@ class ValidationTracker:
         if edited_data.empty:
             st.error("Cannot download backup: The current filtered view contains no data.")
             return
-
         backup = BytesIO()
         try:
             with pd.ExcelWriter(backup) as writer:
