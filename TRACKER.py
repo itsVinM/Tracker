@@ -88,10 +88,17 @@ class ValidationTracker:
             "Product_ID": st.column_config.Column(disabled=True, width="off"),
         }
 
+ 
     def display_editor(self, df: pd.DataFrame) -> pd.DataFrame:
         """Displays the data editor split into two synchronized views."""
+
+        # Define desired column groups
         left_cols = ["Request", "Priority", "Homologated", "Start_Date", "End_Date", "Progress"]
         right_cols = ["Note", "Current", "Product", "Position", "New", "Reference"]
+
+        # Filter only existing columns
+        left_cols = [col for col in left_cols if col in df.columns]
+        right_cols = [col for col in right_cols if col in df.columns]
 
         col1, col2 = st.columns([1, 2])
 
@@ -120,6 +127,7 @@ class ValidationTracker:
 
         return edited_df
 
+
     def save_changes(self, edited_data: pd.DataFrame):
         update_data(edited_data)
         st.success("Changes saved successfully to the multi-table database.")
@@ -138,7 +146,7 @@ class ValidationTracker:
 
         today = datetime.today().strftime("%d%m%Y")
         st.download_button(
-            label="🗂️ Download Backup (Current View)",
+            label="🗂️ Download Backup",
             data=backup.getvalue(),
             file_name=f"Backup_Project_Tracker_{today}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
