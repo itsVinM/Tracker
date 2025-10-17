@@ -89,43 +89,56 @@ class ValidationTracker:
         }
 
  
-    def display_editor(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Displays the data editor split into two synchronized views."""
 
-        # Define desired column groups
-        left_cols = ["Request", "Priority", "Homologated", "Product", "Start_Date", "End_Date", "Progress"]
-        right_cols = ["Note", "Current", "Position", "New", "Reference"]
+    def display_editor(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Displays the data editor split into two synchronized views with optional right column."""
+
+        left_cols = ["Request", "Priority", "Homologated", "Start_Date", "End_Date", "Progress"]
+        right_cols = ["Note", "Current", "Product", "Position", "New", "Reference"]
 
         # Filter only existing columns
         left_cols = [col for col in left_cols if col in df.columns]
         right_cols = [col for col in right_cols if col in df.columns]
 
-        col1, col2 = st.columns([1, 2], width="stretch")
+        show_details = st.checkbox("Show detailed columns", value=True)
 
-        with col1:
+        if show_details:
+            col1, col2 = st.columns([1, 2])
+
+            with col1:
+                st.subheader("📌 Tracker Overview")
+                edited_left = st.data_editor(
+                    df[left_cols],
+                    column_config={col: self.column_config[col] for col in left_cols},
+                    hide_index=True,
+                    num_rows="dynamic",
+                    key="editor_left"
+                )
+
+            with col2:
+                st.subheader("📄 Details")
+                edited_right = st.data_editor(
+                    df[right_cols],
+                    column_config={col: self.column_config[col] for col in right_cols},
+                    hide_index=True,
+                    num_rows="dynamic",
+                    key="editor_right"
+                )
+
+            edited_df = pd.concat([edited_left, edited_right], axis=1)
+
+        else:
             st.subheader("📌 Tracker Overview")
-            edited_left = st.data_editor(
+            edited_df = st.data_editor(
                 df[left_cols],
                 column_config={col: self.column_config[col] for col in left_cols},
                 hide_index=True,
                 num_rows="dynamic",
-                key="editor_left"
+                key="editor_single"
             )
-
-        with col2:
-            st.subheader("📄 Details")
-            edited_right = st.data_editor(
-                df[right_cols],
-                column_config={col: self.column_config[col] for col in right_cols},
-                hide_index=True,
-                num_rows="dynamic",
-                key="editor_right"
-            )
-
-        # Merge edited data back together
-        edited_df = pd.concat([edited_left, edited_right], axis=1)
 
         return edited_df
+
 
 
     def save_changes(self, edited_data: pd.DataFrame):
