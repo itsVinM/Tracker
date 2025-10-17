@@ -45,6 +45,7 @@ class ValidationTracker:
         self.data = self.load_data()
         self.column_config = self.get_column_config()
 
+
     def load_data(self) -> pd.DataFrame:
         data = get_data_from_db(self.query)
 
@@ -59,9 +60,15 @@ class ValidationTracker:
         if 'End_Date' not in data.columns:
             data['End_Date'] = pd.to_datetime("today").normalize()
         if 'Progress' not in data.columns:
-            data['Progress'] = 0.0  # Progress as float between 0 and 1
+            data['Progress'] = 0.0
+
+        # ✅ Convert to datetime if they exist but are strings
+        for date_col in ['Start_Date', 'End_Date']:
+            if date_col in data.columns:
+                data[date_col] = pd.to_datetime(data[date_col], errors='coerce')
 
         return data
+
 
     def get_column_config(self) -> Dict[str, st.column_config.Column]:
         return {
