@@ -93,8 +93,8 @@ class ValidationTracker:
     def display_editor(self, df: pd.DataFrame) -> pd.DataFrame:
         """Displays the data editor split into two synchronized views with optional right column."""
 
-        left_cols = ["Request", "Priority", "Homologated", "Start_Date", "End_Date", "Progress"]
-        right_cols = ["Note", "Current", "Product", "Position", "New", "Reference"]
+        left_cols = ["Request", "Priority", "Homologated","Product", "Start_Date", "End_Date", "Progress"]
+        right_cols = ["Note", "Current" , "Position", "New", "Reference"]
 
         # Filter only existing columns
         left_cols = [col for col in left_cols if col in df.columns]
