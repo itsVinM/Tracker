@@ -55,12 +55,6 @@ class ValidationTracker:
         # Add missing columns with default values
         if 'Priority' not in data.columns:
             data['Priority'] = "🟢 Low"
-        if 'Start_Date' not in data.columns:
-            data['Start_Date'] = pd.to_datetime("today").normalize()
-        if 'End_Date' not in data.columns:
-            data['End_Date'] = pd.to_datetime("today").normalize()
-        if 'Progress' not in data.columns:
-            data['Progress'] = 0.0
 
         # ✅ Convert to datetime if they exist but are strings
         for date_col in ['Start_Date', 'End_Date']:
@@ -83,9 +77,6 @@ class ValidationTracker:
                 options=self.PRIORITY_OPTIONS,
                 width="small"
             ),
-            "Start_Date": st.column_config.DateColumn("Start Date"),
-            "End_Date": st.column_config.DateColumn("End Date"),
-            "Progress": st.column_config.ProgressColumn("Progress", min_value=0.0, max_value=1.0, format="%.0f%%"),
             "Note": st.column_config.TextColumn("Note", disabled=False),
             "Current": st.column_config.TextColumn("Current", disabled=False),
             "Product": st.column_config.TextColumn("Product", disabled=False),
@@ -99,7 +90,7 @@ class ValidationTracker:
         """Displays a single data editor with optional visibility of detail columns."""
 
         # Define column groups
-        base_cols = ["Request", "Priority", "Homologated", "Product", "Start_Date", "End_Date", "Progress"]
+        base_cols = ["Request", "Priority", "Homologated", "Product"]
         detail_cols = ["Note", "Current", "Position", "New", "Reference"]
 
         # Filter only existing columns
@@ -125,28 +116,41 @@ class ValidationTracker:
 
 
     def save_changes(self, edited_data: pd.DataFrame):
-        update_data(edited_data)
-        st.success("Changes saved successfully to the multi-table database.")
+        # Always reload full data before saving
+        full_data = self.load_data()
+
+        # Update full data with edited values (matching by index or unique key)
+        if not edited_data.empty:
+            # Assuming 'Request' is a unique identifier
+            full_data.update(edited_data)
+
+        update_data(full_data)
+        st.success("✅ Changes saved successfully to the multi-table database.")
 
     def download_backup(self, edited_data: pd.DataFrame):
-        if edited_data.empty:
-            st.error("Cannot download backup: The current filtered view contains no data.")
+        # Always reload full data before exporting
+        full_data = self.load_data()
+
+        if full_data is None or full_data.empty:
+            st.error("❌ Cannot download backup: No data available.")
             return
+
         backup = BytesIO()
         try:
             with pd.ExcelWriter(backup) as writer:
-                edited_data.to_excel(writer, index=False, sheet_name="ValidationData")
+                full_data.to_excel(writer, index=False, sheet_name="ValidationData")
         except Exception as e:
             st.error(f"An error occurred during Excel creation: {e}")
             return
 
-        today = datetime.today().strftime("%d%m%Y")
+        today = datetime.today().strftime("%d%m%Y %H%M")
         st.download_button(
             label="🗂️ Download Backup",
             data=backup.getvalue(),
-            file_name=f"Backup_Project_Tracker_{today}.xlsx",
+            file_name=f"Validation_{today}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
+
 
 
 def project_tracker():
