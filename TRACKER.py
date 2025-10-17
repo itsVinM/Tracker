@@ -26,56 +26,57 @@ class ValidationTracker:
         "🛠️FUNCTION", 
         "📡 EMC RADIATED", 
         "⚡ EMC CONDUCTED",
-        "⚙️ FACTORY - EVA",
+        "⚙️ FACTORY",
         "❌ FAILED", 
-        "✅ PASSED" 
+        "✅ PASSED",
+        "📋.DOC"
     ]
 
-    # -----------------------------------------------------------
+    # --- Priority Options with Emojis ---
+    PRIORITY_OPTIONS = [
+        "🔴 High",
+        "🟡 Medium",
+        "🟢 Low"
+    ]
 
     def __init__(self):
-        database() # Ensure the multi-table structure and VIEW exist
-        self.query = "SELECT * FROM ValidationTracker" 
+        database()  # Ensure the multi-table structure and VIEW exist
+        self.query = "SELECT * FROM ValidationTracker"
         self.data = self.load_data()
         self.column_config = self.get_column_config()
 
     def load_data(self) -> pd.DataFrame:
         data = get_data_from_db(self.query)
 
-        # Enforce data types for display
-        for col in ['Datasheet', 'Function', 'EMC']:
-            if col in data.columns:
-                # Convert SQLite integers (0/1) to Python bools
-                data[col] = data[col].astype(bool) 
-        
-        # Convert internal keys to string for display/hiding
         if 'Product_ID' in data.columns:
             data['Product_ID'] = data['Product_ID'].astype(str)
-        
-        return data 
-    
 
+        # Add Priority column if missing
+        if 'Priority' not in data.columns:
+            data['Priority'] = "🟢 Low"  # Default value
+
+        return data
 
     def get_column_config(self) -> Dict[str, st.column_config.Column]:
         return {
             "Request": st.column_config.TextColumn("Request ID", disabled=False),
-
-            "Datasheet": st.column_config.CheckboxColumn("Datasheet", default=False, width="small"),
-            "Function": st.column_config.CheckboxColumn("Function", default=False, width="small"),
-            "EMC": st.column_config.CheckboxColumn("EMC", default=False, width="small"),
             "Homologated": st.column_config.SelectboxColumn(
-                        "Homologated",
-                        options=self.HOMOLOGATION_OPTIONS, 
-                        width="medium"), 
-                        
+                "Homologated",
+                options=self.HOMOLOGATION_OPTIONS,
+                width="medium"
+            ),
+            "Priority": st.column_config.SelectboxColumn(
+                "Priority",
+                options=self.PRIORITY_OPTIONS,
+                width="small"
+            ),
             "Note": st.column_config.TextColumn("Note", disabled=False),
             "Current": st.column_config.TextColumn("Current", disabled=False),
             "Product": st.column_config.TextColumn("Product", disabled=False),
             "Position": st.column_config.TextColumn("Position", disabled=False),
             "New": st.column_config.TextColumn("New", disabled=False),
             "Reference": st.column_config.TextColumn("Reference", disabled=False),
-            
-            "Product_ID": st.column_config.Column(disabled=True, width="off"), 
+            "Product_ID": st.column_config.Column(disabled=True, width="off"),
         }
 
     def display_editor(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -84,18 +85,15 @@ class ValidationTracker:
             df,
             hide_index=True,
             num_rows="dynamic",
-            column_config=self.get_column_config(), 
+            column_config=self.get_column_config(),
             key="validation_data_editor"
         )
 
     def save_changes(self, edited_data: pd.DataFrame):
-        # Calls the function from database.py that updates the 3 separate tables
-        # This function expects a DataFrame!
-        update_data(edited_data) 
+        update_data(edited_data)
         st.success("Changes saved successfully to the multi-table database.")
 
     def download_backup(self, edited_data: pd.DataFrame):
-        # FIX: Check if the DataFrame is empty before attempting to write to Excel
         if edited_data.empty:
             st.error("Cannot download backup: The current filtered view contains no data.")
             return
@@ -103,7 +101,7 @@ class ValidationTracker:
         backup = BytesIO()
         try:
             with pd.ExcelWriter(backup) as writer:
-                edited_data.to_excel(writer, index=False, sheet_name="ValidationData") 
+                edited_data.to_excel(writer, index=False, sheet_name="ValidationData")
         except Exception as e:
             st.error(f"An error occurred during Excel creation: {e}")
             return
@@ -115,7 +113,6 @@ class ValidationTracker:
             file_name=f"Backup_Project_Tracker_{today}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
-
 
 def project_tracker():
     tracker = ValidationTracker()
@@ -170,7 +167,7 @@ def project_tracker():
         passed = len(df[df["Homologated"] == "✅ PASSED"])
         failed = len(df[df["Homologated"] == "❌ FAILED"])
         awaitingRD = len(df[df["Homologated"] == "⏳AWAIT R&D"])
-        factory=len(df[df["Homologated"] == "⚙️ FACTORY - EVA"])
+        factory=len(df[df["Homologated"] == "⚙️ FACTORY"])
 
         # Count entries with FUNCTION or EMC status
         function_emc = len(df[df["Homologated"].isin([
