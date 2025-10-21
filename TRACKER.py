@@ -154,13 +154,31 @@ class ValidationTracker:
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
+def datasheet_comparison_tab():
+    st.header("📄 Datasheet Comparison Tool")
+
+    uploaded_files = st.file_uploader("Upload multiple PDF datasheets", type="pdf", accept_multiple_files=True)
+    product_type = st.selectbox("Select Product Type", ["Diode", "MOSFET", "Inductor", "Capacitor", "Connector"])
+
+    if uploaded_files and product_type:
+        results = {}
+
+        for uploaded_file in uploaded_files:
+            file_path = uploaded_file.name
+            with open(file_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+
+            product_name = os.path.splitext(os.path.basename(file_path))[0]
+            parser = DatasheetParser(file_path, product_type)
+            results[product_name] = parser.parse_info()
+
 
 
 def project_tracker():
     tracker = ValidationTracker()
     df = tracker.data 
     
-    tab1, tab2, tab3 = st.tabs(["📋 Validation Status","📥 Todo!", "📄 Datasheet Parser"])
+    tab1, tab2 = st.tabs(["📋 Validation Status","📥 Todo!"])
 
     with tab1:
         but1, but2 = st.columns(2)
