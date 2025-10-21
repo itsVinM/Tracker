@@ -12,7 +12,7 @@ import plotly.express as px
 # IMPORTANT: Ensure these files exist in your directory.
 from database import *
 from todolist import *
-from DataParser import *
+
 
 st.set_page_config(
     page_title="VALIDATION",
