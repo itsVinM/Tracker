@@ -12,6 +12,8 @@ import plotly.express as px
 # IMPORTANT: Ensure these files exist in your directory.
 from database import *
 from todolist import *
+from DataParser import *
+
 st.set_page_config(
     page_title="VALIDATION",
     layout="wide",
@@ -158,7 +160,7 @@ def project_tracker():
     tracker = ValidationTracker()
     df = tracker.data 
     
-    tab1, tab2 = st.tabs(["📋 Validation Status","📥 Todo!"])
+    tab1, tab2, tab3 = st.tabs(["📋 Validation Status","📥 Todo!", "📄 Datasheet Parser"])
 
     with tab1:
         but1, but2 = st.columns(2)
