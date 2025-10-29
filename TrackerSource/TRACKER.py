@@ -10,7 +10,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 
 from database import *
-from todolist import *
+from check_app import *
 
 
 st.set_page_config(
@@ -53,17 +53,6 @@ class ValidationTracker:
             if date_col in data.columns:
                 data[date_col] = pd.to_datetime(data[date_col], errors='coerce')
 
-            
-        if 'Priority' in data.columns and 'Closed' in data.columns:
-            def compute_progress(row):
-                if pd.notnull(row['Priority']) and pd.notnull(row['Closed']):
-                    total_days = (row['Closed'] - row['Priority']).days
-                    elapsed_days = (datetime.today() - row['Priority']).days
-                    if total_days > 0:
-                        return min(1.0, max(0.0, elapsed_days / total_days))
-                return 0.0
-
-            data["Progress"] = data.apply(compute_progress, axis=1)
 
         return data
 
@@ -79,8 +68,6 @@ class ValidationTracker:
                 width="medium"
             ),
             "Priority": st.column_config.DateColumn("Priority", format="YYYY-MM-DD"),
-            "Closed": st.column_config.DateColumn("Closed", format="YYYY-MM-DD"),
-
             "Note": st.column_config.TextColumn("Note", disabled=False),
             "Current": st.column_config.TextColumn("Current", disabled=False),
             "Product": st.column_config.TextColumn("Product", disabled=False),
@@ -94,7 +81,7 @@ class ValidationTracker:
         """Displays a single data editor with optional visibility of detail columns."""
 
         # Define column groups
-        base_cols = ["Request", "Priority", "Closed", "Progress", "Homologated", "Product"]
+        base_cols = ["Request", "Priority", "Homologated", "Product"]
         detail_cols = ["Note", "Current", "Position", "New", "Reference"]
 
         # Filter only existing columns
@@ -106,8 +93,6 @@ class ValidationTracker:
 
         # Combine columns based on toggle
         visible_cols = base_cols + detail_cols if show_details else base_cols
-
-        st.subheader("📌 Validation Tracker")
         edited_df = st.data_editor(
             df[visible_cols],
             column_config={col: self.column_config[col] for col in visible_cols},
@@ -173,10 +158,15 @@ class ValidationTracker:
         )
 
 
-def project_tracker():
+#--- DASHBOARD FUNCTIONS ---
+
+def display_project_tracker():
+    """
+    Runs the Validation Tracker dashboard based on the user's provided structure.
+    Uses the mock ValidationTracker class.
+    """
     tracker = ValidationTracker()
-    df = tracker.data 
-    
+    df = tracker.data.copy()
    
     but1, but2 = st.columns(2)
 
@@ -185,46 +175,47 @@ def project_tracker():
     col_request, col_product, col_component, col_homologation = st.columns(4)
         
     with col_request:
-            request_search = st.text_input("Search Request ID", key="tab_request_search")
-            if request_search:
-                df = df[df['Request'].astype(str).str.contains(request_search, case=False, na=False)]
+        request_search = st.text_input("Search Request ID", key="tab_request_search")
+        if request_search:
+            df = df[df['Request'].astype(str).str.contains(request_search, case=False, na=False)]
 
     with col_product:
-            product_search = st.text_input("Search Product (Used)", key="tab_product_search")
-            if product_search:
-                df = df[df['Product'].astype(str).str.contains(product_search, case=False, na=False)]
+        product_search = st.text_input("Search Product (Used)", key="tab_product_search")
+        if product_search:
+            df = df[df['Product'].astype(str).str.contains(product_search, case=False, na=False)]
 
     with col_component:
-            component_search = st.text_input("Search New Component", key="tab_new_component_search")
-            if component_search:
-                df = df[df['New'].astype(str).str.contains(component_search, case=False, na=False)]
+        component_search = st.text_input("Search New Component", key="tab_new_component_search")
+        if component_search:
+            df = df[df['New'].astype(str).str.contains(component_search, case=False, na=False)]
 
 
     with col_homologation:
-            homologated_filter = st.multiselect(
-                "Filter by Homologation Status",
-                options=tracker.HOMOLOGATION_OPTIONS,
-                default=[],
-                key="tab_homo_filter"
-            )
-            if homologated_filter:
-                df = df[df['Homologated'].isin(homologated_filter)]
+        homologated_filter = st.multiselect(
+            "Filter by Homologation Status",
+            options=tracker.HOMOLOGATION_OPTIONS,
+            default=[],
+            key="tab_homo_filter"
+        )
+        if homologated_filter:
+            df = df[df['Homologated'].isin(homologated_filter)]
 
 
     edited_data = tracker.display_editor(df) 
+    
     with but1:
-            if st.button("📋 Save changes"):
-                tracker.save_changes(edited_data)
+        if st.button("📋 Save changes", key="tracker_save_btn"):
+            tracker.save_changes(edited_data)
 
     with but2:
-            tracker.download_backup(edited_data) 
+        tracker.download_backup(edited_data) 
 
-        # --- Progress Indicator ---
+    # --- Progress Indicator ---
     total = len(df)
     passed = len(df[df["Homologated"] == "✅ PASSED"])
     failed = len(df[df["Homologated"] == "❌ FAILED"])
     awaitingRD = len(df[df["Homologated"] == "⏳AWAIT R&D"])
-    factory=len(df[df["Homologated"] == "⚙️ FACTORY"])
+    factory = len(df[df["Homologated"] == "⚙️ FACTORY"])
 
     # Count entries with FUNCTION or EMC status
     function_emc = len(df[df["Homologated"].isin([
@@ -234,39 +225,53 @@ def project_tracker():
     missing = total - passed - failed - awaitingRD - factory - function_emc
 
     with metric1:
-                st.metric("Total Request", value="", delta=total, delta_color="off")
+        st.metric("Total Request", value="", delta=total, delta_color="off")
     with metric2:
-                st.metric("Passed Request", value="", delta=passed)
+        st.metric("Passed Request", value="", delta=passed)
     with metric3:
-                st.metric("Failed Request", value="", delta=-failed)
+        st.metric("Failed Request", value="", delta=-failed)
     with metric4:
-                st.metric("Awaiting R&D", value="", delta=-awaitingRD)
+        st.metric("Awaiting R&D", value="", delta=-awaitingRD)
     with metric5:
-                st.metric("Factory Test", value="", delta=-factory)
-                
+        st.metric("Factory Test", value="", delta=-factory)
+            
     with metric6:
-                st.metric("Missing Request", value="" ,delta= missing, delta_color="off")
+        st.metric("Missing Request", value="" ,delta= missing, delta_color="off")
     with metric7:
-                st.metric("Ongoing Request", value="", delta=function_emc)
-        
+        st.metric("Ongoing Request", value="", delta=function_emc)
         
     # --- File Upload/DB Population (Stays in Sidebar) ---
     with st.sidebar:
-        uploaded_file = st.file_uploader("Choose an Excel file to Populate DB", type="xlsx")
+        st.header("Project Tracker Data Management")
+        uploaded_file = st.file_uploader("Choose an Excel file to Populate DB", type="xlsx", key="tracker_uploader")
         
         if uploaded_file:
             st.info("Reading Excel file...")
             try:
                 new_df = pd.read_excel(uploaded_file)
-                update_data(new_df) 
+                # Ensure date columns are correct before saving to master
+                for date_col in ['Priority']:
+                    if date_col in new_df.columns:
+                        new_df[date_col] = pd.to_datetime(new_df[date_col], errors='coerce')
                 
-                st.success("Database has been populated successfully.")
-                st.rerun() # Rerun to load new data
+                update_data(new_df, is_checker=False) 
+                
+                st.success("Tracker database has been populated successfully.")
+                st.rerun() 
                 
             except Exception as e:
                 st.error(f"Error processing file for DB population: {e}")
                 st.warning("Ensure the uploaded file is a valid Excel (.xlsx) file.")
 
 
+
+
+def run_app():
+    """Main application entry point using tabs."""
+    st.sidebar.title("App Navigation")
+    display_project_tracker()
+
+
 if __name__ == "__main__":
-    project_tracker()
+    run_app()
+
