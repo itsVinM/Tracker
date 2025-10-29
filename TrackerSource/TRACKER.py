@@ -23,11 +23,12 @@ class ValidationTracker:
     # --- Defined Homologation Options ---
     HOMOLOGATION_OPTIONS = [
         "⏳AWAIT R&D", 
-        "🆘N/A", 
+        "🆘PRODUCT N/A", 
         "🔍GOT PRODUCT", 
         "🛠️FUNCTION", 
         "📡 EMC RADIATED", 
         "⚡ EMC CONDUCTED",
+        "⚙️ FACTORY",
         "❌ FAILED", 
         "✅ PASSED",
         "📋.DOC"
