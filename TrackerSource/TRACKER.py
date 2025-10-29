@@ -175,32 +175,30 @@ def project_tracker():
     tracker = ValidationTracker()
     df = tracker.data 
     
-    tab1, tab2 = st.tabs(["📋 Validation Status","📥 Todo!"])
+   
+    but1, but2 = st.columns(2)
 
-    with tab1:
-        but1, but2 = st.columns(2)
-
-        metric1, metric2, metric3, metric4, metric5, metric6, metric7= st.columns(7)
+    metric1, metric2, metric3, metric4, metric5, metric6, metric7= st.columns(7)
         
-        col_request, col_product, col_component, col_homologation = st.columns(4)
+    col_request, col_product, col_component, col_homologation = st.columns(4)
         
-        with col_request:
+    with col_request:
             request_search = st.text_input("Search Request ID", key="tab_request_search")
             if request_search:
                 df = df[df['Request'].astype(str).str.contains(request_search, case=False, na=False)]
 
-        with col_product:
+    with col_product:
             product_search = st.text_input("Search Product (Used)", key="tab_product_search")
             if product_search:
                 df = df[df['Product'].astype(str).str.contains(product_search, case=False, na=False)]
 
-        with col_component:
+    with col_component:
             component_search = st.text_input("Search New Component", key="tab_new_component_search")
             if component_search:
                 df = df[df['New'].astype(str).str.contains(component_search, case=False, na=False)]
 
 
-        with col_homologation:
+    with col_homologation:
             homologated_filter = st.multiselect(
                 "Filter by Homologation Status",
                 options=tracker.HOMOLOGATION_OPTIONS,
@@ -211,51 +209,44 @@ def project_tracker():
                 df = df[df['Homologated'].isin(homologated_filter)]
 
 
-        edited_data = tracker.display_editor(df) 
-        with but1:
+    edited_data = tracker.display_editor(df) 
+    with but1:
             if st.button("📋 Save changes"):
                 tracker.save_changes(edited_data)
 
-        with but2:
+    with but2:
             tracker.download_backup(edited_data) 
 
         # --- Progress Indicator ---
-        total = len(df)
-        passed = len(df[df["Homologated"] == "✅ PASSED"])
-        failed = len(df[df["Homologated"] == "❌ FAILED"])
-        awaitingRD = len(df[df["Homologated"] == "⏳AWAIT R&D"])
-        factory=len(df[df["Homologated"] == "⚙️ FACTORY"])
+    total = len(df)
+    passed = len(df[df["Homologated"] == "✅ PASSED"])
+    failed = len(df[df["Homologated"] == "❌ FAILED"])
+    awaitingRD = len(df[df["Homologated"] == "⏳AWAIT R&D"])
+    factory=len(df[df["Homologated"] == "⚙️ FACTORY"])
 
-        # Count entries with FUNCTION or EMC status
-        function_emc = len(df[df["Homologated"].isin([
+    # Count entries with FUNCTION or EMC status
+    function_emc = len(df[df["Homologated"].isin([
             "🛠️FUNCTION", "📡 EMC RADIATED", "⚡ EMC CONDUCTED"
         ])])
 
-        missing = total - passed - failed - awaitingRD - factory - function_emc
+    missing = total - passed - failed - awaitingRD - factory - function_emc
 
-        with metric1:
+    with metric1:
                 st.metric("Total Request", value="", delta=total, delta_color="off")
-        with metric2:
+    with metric2:
                 st.metric("Passed Request", value="", delta=passed)
-        with metric3:
+    with metric3:
                 st.metric("Failed Request", value="", delta=-failed)
-        with metric4:
+    with metric4:
                 st.metric("Awaiting R&D", value="", delta=-awaitingRD)
-        with metric5:
+    with metric5:
                 st.metric("Factory Test", value="", delta=-factory)
                 
-        with metric6:
+    with metric6:
                 st.metric("Missing Request", value="" ,delta= missing, delta_color="off")
-        with metric7:
+    with metric7:
                 st.metric("Ongoing Request", value="", delta=function_emc)
         
-
-        
-    with tab2:
-        todo = TodoManager() 
-        with st.expander("Add task"):
-            todo.add_task()
-        todo.display_calendar()
         
     # --- File Upload/DB Population (Stays in Sidebar) ---
     with st.sidebar:
