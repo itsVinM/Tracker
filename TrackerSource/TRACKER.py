@@ -41,12 +41,33 @@ class ValidationTracker:
 
 
     
+
     def load_data(self) -> pd.DataFrame:
         data = get_data_from_db(self.query)
 
         if 'Product_ID' in data.columns:
             data['Product_ID'] = data['Product_ID'].astype(str)
+
+        # Convert date columns to datetime
+        for date_col in ['Priority', 'Closed']:
+            if date_col in data.columns:
+                data[date_col] = pd.to_datetime(data[date_col], errors='coerce')
+
+            
+        if 'Priority' in data.columns and 'Closed' in data.columns:
+            def compute_progress(row):
+                if pd.notnull(row['Priority']) and pd.notnull(row['Closed']):
+                    total_days = (row['Closed'] - row['Priority']).days
+                    elapsed_days = (datetime.today() - row['Priority']).days
+                    if total_days > 0:
+                        return min(1.0, max(0.0, elapsed_days / total_days))
+                return 0.0
+
+            data["Progress"] = data.apply(compute_progress, axis=1)
+
         return data
+
+
 
 
     def get_column_config(self) -> Dict[str, st.column_config.Column]:
@@ -59,6 +80,7 @@ class ValidationTracker:
             ),
             "Priority": st.column_config.DateColumn("Priority", format="YYYY-MM-DD"),
             "Closed": st.column_config.DateColumn("Closed", format="YYYY-MM-DD"),
+
             "Note": st.column_config.TextColumn("Note", disabled=False),
             "Current": st.column_config.TextColumn("Current", disabled=False),
             "Product": st.column_config.TextColumn("Product", disabled=False),
@@ -72,7 +94,7 @@ class ValidationTracker:
         """Displays a single data editor with optional visibility of detail columns."""
 
         # Define column groups
-        base_cols = ["Request", "Priority", "Homologated", "Product"]
+        base_cols = ["Request", "Priority", "Closed", "Progress", "Homologated", "Product"]
         detail_cols = ["Note", "Current", "Position", "New", "Reference"]
 
         # Filter only existing columns
