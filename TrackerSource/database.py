@@ -18,7 +18,9 @@ def database():
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS ValidationTracker (
             Product_ID TEXT PRIMARY KEY,
-            Request TEXT,    
+            Request TEXT,
+            Priority DATE,
+            Closed DATE,
             Homologated TEXT,
             Note TEXT,
             Current TEXT,

@@ -33,14 +33,6 @@ class ValidationTracker:
         "📋.DOC"
     ]
 
-    # --- Priority Options with Emojis ---
-    PRIORITY_OPTIONS = [
-        "🔔 Urgent",
-        "🔴 High",
-        "🟡 Medium",
-        "🟢 Low"
-    ]
-
     def __init__(self):
         database()  # Ensure the multi-table structure and VIEW exist
         self.query = "SELECT * FROM ValidationTracker"
@@ -48,21 +40,12 @@ class ValidationTracker:
         self.column_config = self.get_column_config()
 
 
+    
     def load_data(self) -> pd.DataFrame:
         data = get_data_from_db(self.query)
 
         if 'Product_ID' in data.columns:
             data['Product_ID'] = data['Product_ID'].astype(str)
-
-        # Add missing columns with default values
-        if 'Priority' not in data.columns:
-            data['Priority'] = "🟢 Low"
-
-        # ✅ Convert to datetime if they exist but are strings
-        for date_col in ['Start_Date', 'End_Date']:
-            if date_col in data.columns:
-                data[date_col] = pd.to_datetime(data[date_col], errors='coerce')
-
         return data
 
 
@@ -74,11 +57,8 @@ class ValidationTracker:
                 options=self.HOMOLOGATION_OPTIONS,
                 width="medium"
             ),
-            "Priority": st.column_config.SelectboxColumn(
-                "Priority",
-                options=self.PRIORITY_OPTIONS,
-                width="small"
-            ),
+            "Priority": st.column_config.DateColumn("Priority", format="YYYY-MM-DD"),
+            "Closed": st.column_config.DateColumn("Closed", format="YYYY-MM-DD"),
             "Note": st.column_config.TextColumn("Note", disabled=False),
             "Current": st.column_config.TextColumn("Current", disabled=False),
             "Product": st.column_config.TextColumn("Product", disabled=False),
