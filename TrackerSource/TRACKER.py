@@ -10,7 +10,6 @@ import plotly.graph_objects as go
 import plotly.express as px
 
 from database import *
-from check_app import *
 
 
 st.set_page_config(
