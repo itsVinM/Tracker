@@ -3,6 +3,8 @@ import pandas as pd
 import streamlit as st
 from datetime import datetime
 from typing import List, Dict
+from streamlit_calendar import calendar  # pip install streamlit-calendar
+import plotly.express as px
 
 class TodoManager:
     TODO_FILE = "todo_list.json"
@@ -11,23 +13,7 @@ class TodoManager:
     def load_todo(self) -> List[Dict[str, str]]:
         if os.path.exists(self.TODO_FILE):
             with open(self.TODO_FILE, "r") as f:
-                todos = json.load(f)
-                valid_todos = []
-                for item in todos:
-                    task = str(item.get("task", "")).strip()
-                    priority = item.get("priority", "Medium")
-                    due_date = item.get("due_date", "")
-                    note = item.get("note", "")
-                    if priority not in self.PRIORITY_LEVELS:
-                        priority = "Medium"
-                    if task:
-                        valid_todos.append({
-                            "task": task,
-                            "priority": priority,
-                            "due_date": due_date,
-                            "note": note
-                        })
-                return valid_todos
+                return json.load(f)
         return []
 
     def save_todo(self, todos: List[Dict[str, str]]):
@@ -35,10 +21,10 @@ class TodoManager:
             json.dump(todos, f, indent=2)
 
     def add_task(self):
+        st.subheader("➕ Add New Task")
         new_task = st.text_input("Enter a new task")
         priority = st.selectbox("Select priority", self.PRIORITY_LEVELS)
         due_date = st.date_input("Select due date", value=datetime.today())
-        note = st.text_area("Optional note")
 
         if st.button("Save Task"):
             if new_task.strip():
@@ -46,15 +32,15 @@ class TodoManager:
                 todos.append({
                     "task": new_task.strip(),
                     "priority": priority,
-                    "due_date": due_date.strftime("%Y-%m-%d"),
-                    "note": note.strip()
+                    "due_date": due_date.strftime("%Y-%m-%d")
                 })
                 self.save_todo(todos)
                 st.success("Task saved successfully!")
             else:
                 st.warning("Please enter a valid task.")
 
-    def display_calendar(self):
+    def display_calendar_and_gantt(self):
+        st.subheader("📅 Calendar & 📊 Gantt Chart")
         todos = self.load_todo()
         if not todos:
             st.info("No tasks scheduled.")
@@ -63,56 +49,42 @@ class TodoManager:
         df = pd.DataFrame(todos)
         df["due_date"] = pd.to_datetime(df["due_date"], errors="coerce")
 
-        priority_order = {"High": 1, "Medium": 2, "Low": 3}
-        df["priority_rank"] = df["priority"].map(priority_order)
-        df = df.sort_values(["priority_rank", "due_date"])
+        # Prepare events for calendar
+        events = []
+        for t in todos:
+            color = "#d9534f" if t["priority"] == "High" else "#f0ad4e" if t["priority"] == "Medium" else "#5cb85c"
+            events.append({
+                "title": t["task"],
+                "start": t["due_date"],
+                "color": color
+            })
 
-        priority_colors = {
-            "High": "#d9534f",
-            "Medium": "#f0ad4e",
-            "Low": "#5cb85c"
-        }
+        # Two-column layout
+        col_calendar, col_gantt = st.columns([2, 3])
 
-        col_high, col_medium, col_low = st.columns(3)
+        with col_calendar:
+            st.markdown("### Calendar View")
+            selected_date = st.date_input("Select a date", value=datetime.today())
+            calendar(events=events)
 
-        for priority, col in zip(["High", "Medium", "Low"], [col_high, col_medium, col_low]):
-            with col:
-                st.markdown(f"#### {priority}")
-                priority_tasks = df[df["priority"] == priority]
+            # Show tasks for selected date
+            day_tasks = df[df["due_date"].dt.date == selected_date]
+            st.markdown("#### Tasks for Selected Day")
+            if day_tasks.empty:
+                st.info("No tasks for this day.")
+            else:
+                for priority in self.PRIORITY_LEVELS:
+                    st.markdown(f"**{priority}**")
+                    for _, row in day_tasks[day_tasks["priority"] == priority].iterrows():
+                        st.write(f"- {row['task']}")
 
-                for i, row in priority_tasks.iterrows():
-                    due_date = row["due_date"]
-                    date_str = due_date.strftime('%d %b %Y') if pd.notnull(due_date) else "No due date"
-                    task_key = f"{row['task']}_{i}"
-
-                    note = row.get("note", "")
-                    note_html = f"<br>🗒️ <em>{note}</em>" if note else ""
-
-                    st.markdown(f"""
-                    <div style="background-color:{priority_colors[priority]}; padding:8px; border-radius:6px; margin-bottom:8px; font-size:13px; color:white;">
-                        <strong>📝 {row['task']}</strong><br>
-                        📆 <em>{date_str}</em>{note_html}
-                    </div>
-                    """, unsafe_allow_html=True)
-
-                    with st.expander("✏️ Edit / ❌ Cancel", expanded=False):
-                        new_task = st.text_input("Edit task", value=row["task"], key=f"edit_task_{i}")
-                        new_priority = st.selectbox("Edit priority", self.PRIORITY_LEVELS, index=self.PRIORITY_LEVELS.index(row["priority"]), key=f"edit_priority_{i}")
-                        new_due_date = st.date_input("Edit due date", value=due_date if pd.notnull(due_date) else datetime.today(), key=f"edit_date_{i}")
-                        new_note = st.text_area("Edit note", value=note, key=f"edit_note_{i}")
-
-                        if st.button("💾 Save Changes", key=f"save_{i}"):
-                            todos[i] = {
-                                "task": new_task.strip(),
-                                "priority": new_priority,
-                                "due_date": new_due_date.strftime("%Y-%m-%d"),
-                                "note": new_note.strip()
-                            }
-                            self.save_todo(todos)
-                            st.success("Task updated successfully!")
-
-                        if st.button("❌ Delete Task", key=f"delete_{i}"):
-                            todos.pop(i)
-                            self.save_todo(todos)
-                            st.warning("Task deleted.")
-                            
+        with col_gantt:
+            st.markdown("### Gantt Chart")
+            # Create Gantt chart using Plotly
+            df["start"] = df["due_date"]
+            df["end"] = df["due_date"]  # Single-day tasks
+            color_map = {"High": "red", "Medium": "orange", "Low": "green"}
+            fig = px.timeline(df, x_start="start", x_end="end", y="task", color="priority",
+                              color_discrete_map=color_map, title="Task Timeline")
+            fig.update_yaxes(autorange="reversed")  # Gantt style
+            st.plotly_chart(fig, use_container_width=True)

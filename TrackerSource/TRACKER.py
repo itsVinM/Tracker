@@ -111,7 +111,7 @@ class ValidationTracker:
             column_config={col: self.column_config[col] for col in visible_cols},
             hide_index=True,
             num_rows="dynamic",
-            key="editor_main"
+            key="editor_main",
         )
 
         return edited_df
@@ -125,20 +125,26 @@ class ValidationTracker:
             st.warning("No changes to save.")
             return
 
-        # Detect new rows by comparing unique key (e.g., 'Request')
+        # Detect removed rows
         existing_keys = set(full_data['Request'])
-        new_rows = edited_data[~edited_data['Request'].isin(existing_keys)]
+        edited_keys = set(edited_data['Request'])
+        removed_keys = existing_keys - edited_keys
+
+        # Drop removed rows
+        if removed_keys:
+            full_data = full_data[~full_data['Request'].isin(removed_keys)]
 
         # Update existing rows
         full_data.update(edited_data)
 
-        # Append new rows
+        # Detect new rows
+        new_rows = edited_data[~edited_data['Request'].isin(existing_keys)]
         if not new_rows.empty:
             full_data = pd.concat([full_data, new_rows], ignore_index=True)
 
         # Save back to DB
         update_data(full_data)
-        st.success("✅ Changes saved successfully, including new rows.")
+        st.success("✅ Changes saved successfully, including deletions and new rows.")
 
     def download_backup(self, edited_data: pd.DataFrame):
         # Always reload full data before exporting
