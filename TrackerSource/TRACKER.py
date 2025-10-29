@@ -9,7 +9,6 @@ import plotly.figure_factory as ff
 import plotly.graph_objects as go
 import plotly.express as px
 
-# IMPORTANT: Ensure these files exist in your directory.
 from database import *
 from todolist import *
 
@@ -119,16 +118,27 @@ class ValidationTracker:
 
 
     def save_changes(self, edited_data: pd.DataFrame):
-        # Always reload full data before saving
+        # Reload full data
         full_data = self.load_data()
 
-        # Update full data with edited values (matching by index or unique key)
-        if not edited_data.empty:
-            # Assuming 'Request' is a unique identifier
-            full_data.update(edited_data)
+        if edited_data.empty:
+            st.warning("No changes to save.")
+            return
 
+        # Detect new rows by comparing unique key (e.g., 'Request')
+        existing_keys = set(full_data['Request'])
+        new_rows = edited_data[~edited_data['Request'].isin(existing_keys)]
+
+        # Update existing rows
+        full_data.update(edited_data)
+
+        # Append new rows
+        if not new_rows.empty:
+            full_data = pd.concat([full_data, new_rows], ignore_index=True)
+
+        # Save back to DB
         update_data(full_data)
-        st.success("✅ Changes saved successfully to the multi-table database.")
+        st.success("✅ Changes saved successfully, including new rows.")
 
     def download_backup(self, edited_data: pd.DataFrame):
         # Always reload full data before exporting
