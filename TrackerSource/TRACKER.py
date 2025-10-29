@@ -259,9 +259,6 @@ def project_tracker():
         
     # --- File Upload/DB Population (Stays in Sidebar) ---
     with st.sidebar:
-        st.markdown("### 🗄️ Database Management")
-        st.markdown("---")
-        st.subheader("Data Upload (Overwrite DB)")
         uploaded_file = st.file_uploader("Choose an Excel file to Populate DB", type="xlsx")
         
         if uploaded_file:
