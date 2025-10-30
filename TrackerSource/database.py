@@ -38,8 +38,8 @@ def get_data_from_db(query):
 def update_data(df: pd.DataFrame):
     import sqlite3
 
-    table_name = "ValidationTracker" if is_checker else "OtherTable"
-    conn = sqlite3.connect("your_database.db")
+    table_name = "ValidationTracker" 
+    conn = sqlite3.connect(DC_NAME)
     cursor = conn.cursor()
 
     # Replace existing table with new data

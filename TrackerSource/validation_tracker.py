@@ -104,7 +104,6 @@ class ValidationTracker:
 
         return edited_df
 
-
     def save_changes(self, edited_data: pd.DataFrame):
         full_data = self.load_data()
 
@@ -112,27 +111,30 @@ class ValidationTracker:
             st.warning("No changes to save.")
             return
 
-        # Ensure 'Request' is treated as string for consistency
+        # Ensure 'Request' column exists
+        if 'Request' not in edited_data.columns:
+            st.error("Missing 'Request' column in edited data.")
+            return
+
+        # Normalize types
         full_data['Request'] = full_data['Request'].astype(str)
         edited_data['Request'] = edited_data['Request'].astype(str)
 
-        # Detect removed rows
-        existing_keys = set(full_data['Request'])
-        edited_keys = set(edited_data['Request'])
-        removed_keys = existing_keys - edited_keys
-
+        # Remove deleted rows
+        removed_keys = set(full_data['Request']) - set(edited_data['Request'])
         if removed_keys:
             full_data = full_data[~full_data['Request'].isin(removed_keys)]
 
-        # Remove rows that will be updated
+        # Remove old versions of updated/new rows
         full_data = full_data[~full_data['Request'].isin(edited_data['Request'])]
 
         # Append updated and new rows
-        full_data = pd.concat([full_data, edited_data], ignore_index=True)
+        updated_data = pd.concat([full_data, edited_data], ignore_index=True)
 
-        # Save back to DB
-        update_data(full_data)
-        st.success("✅ Changes saved successfully, including deletions and new rows.")
+        # Persist changes
+        update_data(updated_data)  # Make sure this writes to DB or file
+        st.success("✅ Changes saved successfully!")
+
 
     def download_backup(self, edited_data: pd.DataFrame):
         # Always reload full data before exporting

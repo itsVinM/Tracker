@@ -139,9 +139,7 @@ class HomologationApp:
             st.subheader("📄 Live Preview")
 
             view1, view2, view3 = st.columns(3)
-            with view1:
-                st.image(logo_path)
-            with view2:
+            with view1:              
                 st.markdown(f"### {data['product_type']}")
                 st.markdown(f"**Solicitud de homologación**")
                 st.markdown(f"**Códigos:** {data['codigos']}")
@@ -154,11 +152,19 @@ class HomologationApp:
             st.markdown(data['motivo'].replace("\n", "<br>"), unsafe_allow_html=True)
             st.markdown("#### 3. Investigativo previo")
             st.markdown(data['investigativo'].replace("\n", "<br>"), unsafe_allow_html=True)
-            st.markdown("#### 4. Comparativa parámetros")
+            
+            
+            # Remove index and empty rows
+            clean_materiales_df = materiales_df.dropna(how="all").reset_index(drop=True)
+            clean_dimensionado_df = dimensionado_df.dropna(how="all").reset_index(drop=True)
+
+            # Display without index
             st.markdown("**Materiales y características mecánicas**")
-            st.dataframe(edited_materiales_df)
+            st.table(clean_materiales_df)
+
             st.markdown("**Dimensiones**")
-            st.dataframe(edited_dimensionado_df)
+            st.table(clean_dimensionado_df)
+
             st.markdown("#### 6. Conclusiones")
             st.markdown(data['conclusion'])
 
@@ -191,9 +197,9 @@ class HomologationApp:
         cell_right = table.cell(0, 2)
         info = (
             f"Doc ID: {data['doc_id']}\n"
-            f"Date: {data['date']}\n"
-            f"Author: {data['author']}\n"
             f"Edition: {data['edition']}\n"
+            f"Author: {data['author']}\n"
+            f"Date: {data['date']}\n"
         )
         cell_right.text = info
 
@@ -262,26 +268,4 @@ class HomologationApp:
             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         )
 
-        self.log_report(data)
 
-    def log_report(self, data):
-        log_path = "report_log.json"
-        log_entry = {
-            "doc_id": data.get("doc_id"),
-            "date": data.get("date"),
-            "author": data.get("author"),
-            "component": data.get("component", ""),
-            "product_type": data.get("product_type", ""),
-            "timestamp": str(date.today())
-        }
-
-        if os.path.exists(log_path):
-            with open(log_path, "r") as f:
-                logs = json.load(f)
-        else:
-            logs = []
-
-        logs.append(log_entry)
-
-        with open(log_path, "w") as f:
-            json.dump(logs, f, indent=2)
