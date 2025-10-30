@@ -5,7 +5,7 @@ from docx.shared import Inches, Pt
 from docx.oxml import OxmlElement
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
-import io, os
+import io, os, html
 from datetime import date
 from io import BytesIO
 
@@ -322,16 +322,17 @@ class HomologationApp:
 
     
         
+        
         datasheet_links = data.get('datasheet_links', [])
         components_html = ""
         if datasheet_links:
             components_html += "<br><strong>Componentes:</strong><ul>"
             for comp in datasheet_links:
-                name = comp.get('name', 'Componente')
-                url = comp.get('url', '')
+                name = html.escape(comp.get('name', 'Componente'))  # ✅ Escape special chars
+                url = html.escape(comp.get('url', ''))  # ✅ Escape URL too
                 if url.strip():
-                    # ✅ Embed link in the name
-                    components_html += f'<li><{url}{name}</a></li>'
+                    # ✅ Embed link inside the name
+                    components_html += f'<li><a href={url}>{name}</a></li>'
                 else:
                     components_html += f'<li>{name}</li>'
             components_html += "</ul>"
