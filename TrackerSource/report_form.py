@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import docx
 from docx import Document
 from docx.shared import Inches, Pt
 from docx.oxml import OxmlElement
@@ -8,6 +9,7 @@ from docx.oxml.ns import qn
 import io, os, html
 from datetime import date
 from io import BytesIO
+from PIL import Image
 
 # Predefined comparison fields per component type
 PRODUCT_COMPARISON_FIELDS = {
@@ -46,24 +48,45 @@ class HomologationApp:
         if 'report_data' not in st.session_state:
             st.session_state.report_data = {}
     
-
-    def add_hyperlink(self, paragraph, text, url):
+    def add_hyperlink(self,paragraph, url, text):
+        """
+        Add a hyperlink to a paragraph.
+        """
+        # Create the relationship for the hyperlink
         part = paragraph.part
         r_id = part.relate_to(url, 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink', is_external=True)
+
+        # Create the w:hyperlink tag and add attributes
         hyperlink = OxmlElement('w:hyperlink')
         hyperlink.set(qn('r:id'), r_id)
+
+        # Create a w:r element
         new_run = OxmlElement('w:r')
         rPr = OxmlElement('w:rPr')
+
+        # Style: blue and underlined
+        color = OxmlElement('w:color')
+        color.set(qn('w:val'), '0000FF')
+        rPr.append(color)
+
+        underline = OxmlElement('w:u')
+        underline.set(qn('w:val'), 'single')
+        rPr.append(underline)
+
         new_run.append(rPr)
-        t = OxmlElement('w:t')
-        t.text = text
-        new_run.append(t)
+
+        # Add text
+        text_elem = OxmlElement('w:t')
+        text_elem.text = text
+        new_run.append(text_elem)
+
         hyperlink.append(new_run)
         paragraph._p.append(hyperlink)
+        return hyperlink
 
 
     def display_form(self):
-        logo_path = os.path.join(os.getcwd(), "premium_psu_logo.png")
+        logo_path = "premium_psu_logo.png"
         col1,col2=st.columns(2)
         with col1:
             data = st.session_state.report_data
@@ -148,8 +171,8 @@ class HomologationApp:
             if st.button("Generate DOCX Report"):
                 self.generate_doc(data, logo_path)
 
-    def generate_doc(self,data, logo_path):
-        # Generate DOCX
+    def generate_doc(self, data, logo_path):
+
         doc = Document()
         style = doc.styles['Normal']
         font = style.font
@@ -162,11 +185,16 @@ class HomologationApp:
 
         # Left: Logo
         cell_logo = table.cell(0, 0)
-        try:
-            run = cell_logo.paragraphs[0].add_run()
-            run.add_picture(logo_path, width=Inches(1.2))
-        except:
-            cell_logo.text = "Logo not found"
+        
+        
+        image = Image.open("TrackerSource/premium_psu_logo.png")
+        buffer = BytesIO()
+        image.save(buffer, format="PNG")
+        buffer.seek(0)
+
+        run = cell_logo.paragraphs[0].add_run()
+        run.add_picture(buffer, width=Inches(1.2))
+
 
         # Center
         cell_center = table.cell(0, 1)
@@ -182,7 +210,6 @@ class HomologationApp:
             f"Date: {data['date']}\n"
             f"Author: {data['author']}\n"
             f"Edition: {data['edition']}\n"
-            f"Comment: {data.get('comments', {}).get('Códigos', 'OK')}"
         )
         cell_right.text = info
 
@@ -190,10 +217,27 @@ class HomologationApp:
         doc.add_paragraph()
         doc.add_heading('1. Objetivo', level=1)
         doc.add_paragraph(data['objeto'])
+
         doc.add_heading('2. Motivo de la solicitud', level=1)
         doc.add_paragraph(data.get('motivo', 'Texto explicativo aquí...'))
+
         doc.add_heading('3. Investigativo previo', level=1)
         doc.add_paragraph(data.get('investigativo', 'Detalles previos...'))
+
+        
+        datasheet_links = data.get('datasheet_links', [])
+        if datasheet_links:
+            doc.add_paragraph("Componentes:", style='Normal')
+            for comp in datasheet_links:
+                name = comp.get('name', 'Componente')
+                url = comp.get('url', '')
+                p = doc.add_paragraph()
+                if url.strip():
+                    self.add_hyperlink(p, url, name)  # ✅ Embedded link inside name
+                else:
+                    p.add_run(name)
+
+
         doc.add_heading('4. Comparativa parámetros', level=1)
         doc.add_heading('Materiales y características mecánicas', level=2)
 
@@ -235,14 +279,12 @@ class HomologationApp:
         doc.save(buffer)
         buffer.seek(0)
 
-        # ✅ Add Download Button Here
         st.download_button(
             label="Download DOCX",
             data=buffer,
             file_name="Homologation_Report.docx",
             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         )
-            
 
     def display_preview(self, logo_path=None):
         data = st.session_state.report_data
@@ -250,16 +292,16 @@ class HomologationApp:
         # CSS Styles
         st.markdown(
             "<style>"
-            ".doc-container { background-color: #fff; color: #000; font-family: Arial, sans-serif; padding: 20px; max-width: 900px; margin: auto; border: 1px solid #ccc; }"
+            ".doc-container { background-color: #fff; color: #0070C0; font-family: Arial, sans-serif; padding: 20px; max-width: 900px; margin: auto; border: 1px solid #ccc; }"
             ".header-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }"
             ".header-table td { vertical-align: top; padding: 10px; }"
             ".header-left img { max-height: 60px; }"
             ".header-center { text-align: center; }"
-            ".header-center h2 { margin: 5px 0; font-size: 24px; color: #000; }"
+            ".header-center h2 { margin: 5px 0; font-size: 24px; color: #0070C0; }"
             ".header-center p { margin: 2px 0; font-size: 16px; }"
             ".header-right table { border-collapse: collapse; font-size: 14px; }"
             ".header-right td { padding: 4px 8px; }"
-            ".ok-cell { background-color: #92D050; color: #000; font-weight: bold; }"
+            ".ok-cell { background-color: #92D050; color: #0070C0; font-weight: bold; }"
             ".nok-cell { background-color: #FF0000; color: #fff; font-weight: bold; }"
             ".section-title { font-size: 18px; font-weight: bold; color: #0070C0; margin-top: 20px; }"
             ".sub-section-title { font-size: 16px; font-weight: bold; color: #0070C0; margin-top: 15px; }"
@@ -268,14 +310,16 @@ class HomologationApp:
             "</style>",
             unsafe_allow_html=True
         )
+    
+
+        
+        image = Image.open("TrackerSource/premium_psu_logo.png")
+        st.image(image)
 
         # Header HTML
         header_html = (
             '<table class="header-table">'
             '<tr>'
-            '<td class="header-left">'
-            f'{f"<img src=\'{logo_path}\' alt=\'Logo\'>" if logo_path else ""}'
-            '</td>'
             '<td class="header-center">'
             f'<h2>{data["product_type"]}</h2>'
             '<p><strong>Solicitud de homologación</strong></p>'
