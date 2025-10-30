@@ -78,59 +78,89 @@ class HomologationApp:
         return pd.DataFrame(grid_response['data'])
 
     def display_form(self):
-        logo_path = "premium_psu_logo.png"
+        logo_path = "TrackerSource/premium_psu_logo.png"
         data = st.session_state.report_data
 
-        with st.expander("General Information", expanded=True):
-            cols = st.columns(3)
-            data['product_type'] = cols[0].selectbox("Component Type", list(PRODUCT_COMPARISON_FIELDS.keys()))
-            data['doc_id'] = cols[1].text_input("Document ID", "H-2025-133")
-            data['edition'] = cols[2].text_input("Edition", "2")
-            cols2 = st.columns(3)
-            data['codigos'] = cols2[0].text_input("Códigos", "26010206")
-            data['date'] = cols2[1].date_input("Date", value=date.today()).strftime("%d.%m.%Y")
-            data['author'] = cols2[2].text_input("Author", "V.Mocanu")
+        col1, col2 = st.columns(2)
 
-        with st.expander("Objecto", expanded=True):
-            data['objeto'] = st.text_area("Objecto", "Se estudia la posibilidad de homologar el componente...")
+        with col1:
+            with st.expander("General Information", expanded=True):
+                cols = st.columns(3)
+                data['product_type'] = cols[0].selectbox("Component Type", list(PRODUCT_COMPARISON_FIELDS.keys()))
+                data['doc_id'] = cols[1].text_input("Document ID", "H-2025-133")
+                data['edition'] = cols[2].text_input("Edition", "2")
+                cols2 = st.columns(3)
+                data['codigos'] = cols2[0].text_input("Códigos", "26010206")
+                data['date'] = cols2[1].date_input("Date", value=date.today()).strftime("%d.%m.%Y")
+                data['author'] = cols2[2].text_input("Author", "V.Mocanu")
 
-        with st.expander("Motivo", expanded=True):
-            data['motivo'] = st.text_area("Motivo", "Solicitante:\nMotivo:")
+            with st.expander("Objecto", expanded=True):
+                data['objeto'] = st.text_area("Objecto", "Se estudia la posibilidad de homologar el componente...")
 
-        with st.expander("Investigativo", expanded=True):
-            data['investigativo'] = st.text_area("Investigativo", "El componente que se compraba hasta ahora es...\nG:\\Laboratori\\PLANOS - M. PRIMAS_Backup\\Data sheets")
+            with st.expander("Motivo", expanded=True):
+                data['motivo'] = st.text_area("Motivo", "Solicitante:\nMotivo:")
 
-        num_links = st.slider("Número de componentes a comparar", 1, 5, 2)
-        data['datasheet_links'] = []
-        for i in range(num_links):
-            name = st.text_input(f"Nombre del componente {i+1}", key=f"name_{i}")
-            url = st.text_input(f"Enlace del componente {i+1}", key=f"url_{i}")
-            if not name.strip():
-                name = f"Component_{i+1}"
-            data['datasheet_links'].append({'name': name, 'url': url})
+            with st.expander("Investigativo", expanded=True):
+                data['investigativo'] = st.text_area("Investigativo", "El componente que se compraba hasta ahora es...")
 
-        with st.expander("Comparison Tables", expanded=True):
-            comp_names = [comp['name'] for comp in data['datasheet_links']]
-            materiales_df = pd.DataFrame(columns=["Field"] + comp_names)
-            for field in PRODUCT_COMPARISON_FIELDS[data['product_type']]['materiales']:
-                row = {"Field": field}
-                for name in comp_names:
-                    row[name] = ""
-                materiales_df.loc[len(materiales_df)] = row
-            edited_materiales_df = self.editable_table_aggrid(materiales_df, key="materiales_editor")
-            data['materiales'] = edited_materiales_df.to_dict(orient="records")
+            num_links = st.slider("Número de componentes a comparar", 1, 5, 2)
+            data['datasheet_links'] = []
+            for i in range(num_links):
+                name = st.text_input(f"Nombre del componente {i+1}", key=f"name_{i}")
+                url = st.text_input(f"Enlace del componente {i+1}", key=f"url_{i}")
+                if not name.strip():
+                    name = f"Component_{i+1}"
+                data['datasheet_links'].append({'name': name, 'url': url})
 
-            dimensionado_df = pd.DataFrame(columns=["Field"] + comp_names)
-            for field in PRODUCT_COMPARISON_FIELDS[data['product_type']]['dimensionado']:
-                row = {"Field": field}
-                for name in comp_names:
-                    row[name] = ""
-                dimensionado_df.loc[len(dimensionado_df)] = row
-            edited_dimensionado_df = self.editable_table_aggrid(dimensionado_df, key="dimensionado_editor")
-            data['dimensionado'] = edited_dimensionado_df.to_dict(orient="records")
+            with st.expander("Comparison Tables", expanded=True):
+                comp_names = [comp['name'] for comp in data['datasheet_links']]
+                materiales_df = pd.DataFrame(columns=["Field"] + comp_names)
+                for field in PRODUCT_COMPARISON_FIELDS[data['product_type']]['materiales']:
+                    row = {"Field": field}
+                    for name in comp_names:
+                        row[name] = ""
+                    materiales_df.loc[len(materiales_df)] = row
+                edited_materiales_df = self.editable_table_aggrid(materiales_df, key="materiales_editor")
+                data['materiales'] = edited_materiales_df.to_dict(orient="records")
 
-        with st.expander("Conclusion", expanded=True):
-            data['conclusion'] = st.text_area("Conclusión", "El componente propuesto tiene un diseño con mismas dimensiones de las opciones homologadas.")
+                dimensionado_df = pd.DataFrame(columns=["Field"] + comp_names)
+                for field in PRODUCT_COMPARISON_FIELDS[data['product_type']]['dimensionado']:
+                    row = {"Field": field}
+                    for name in comp_names:
+                        row[name] = ""
+                    dimensionado_df.loc[len(dimensionado_df)] = row
+                edited_dimensionado_df = self.editable_table_aggrid(dimensionado_df, key="dimensionado_editor")
+                data['dimensionado'] = edited_dimensionado_df.to_dict(orient="records")
+
+            with st.expander("Conclusion", expanded=True):
+                data['conclusion'] = st.text_area("Conclusión", "El componente propuesto tiene un diseño con mismas dimensiones de las opciones homologadas.")
+
+        with col2:
+            st.subheader("📄 Live Preview")
+
+            col1 col2, col3 = st.columns(3)
+            with col1:
+             st.image(logo_path)
+            with col2:
+                st.markdown(f"### {data['product_type']}")
+                st.markdown(f"**Solicitud de homologación**")
+                st.markdown(f"**Códigos:** {data['codigos']}")
+            with col3:
+                st.markdown(f"**Doc ID:** {data['doc_id']} | **Edition:** {data['edition']} | **Date:** {data['date']} | **Author:** {data['author']}")
+            
+            st.markdown("#### 1. Objecto")
+            st.markdown(data['objeto'].replace("\n", "<br>"), unsafe_allow_html=True)
+            st.markdown("#### 2. Motivo de la solicitud")
+            st.markdown(data['motivo'].replace("\n", "<br>"), unsafe_allow_html=True)
+            st.markdown("#### 3. Investigativo previo")
+            st.markdown(data['investigativo'].replace("\n", "<br>"), unsafe_allow_html=True)
+            st.markdown("#### 4. Comparativa parámetros")
+            st.markdown("**Materiales y características mecánicas**")
+            st.dataframe(edited_materiales_df)
+            st.markdown("**Dimensiones**")
+            st.dataframe(edited_dimensionado_df)
+            st.markdown("#### 6. Conclusiones")
+            st.markdown(data['conclusion'])
 
         if st.button("Generate DOCX Report"):
             self.generate_doc(data, logo_path)
@@ -228,7 +258,7 @@ class HomologationApp:
         st.download_button(
             label="Download DOCX",
             data=buffer,
-            file_name=f"Homologacion_{data.get('doc_id', 'sin_id')}.docx",
+            file_name=f"Homologacion_{data.get('codigos')}.docx",
             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         )
 
