@@ -138,14 +138,14 @@ class HomologationApp:
         with col2:
             st.subheader("📄 Live Preview")
 
-            col1 col2, col3 = st.columns(3)
-            with col1:
-             st.image(logo_path)
-            with col2:
+            view1, view2, view3 = st.columns(3)
+            with view1:
+                st.image(logo_path)
+            with view2:
                 st.markdown(f"### {data['product_type']}")
                 st.markdown(f"**Solicitud de homologación**")
                 st.markdown(f"**Códigos:** {data['codigos']}")
-            with col3:
+            with view3:
                 st.markdown(f"**Doc ID:** {data['doc_id']} | **Edition:** {data['edition']} | **Date:** {data['date']} | **Author:** {data['author']}")
             
             st.markdown("#### 1. Objecto")
