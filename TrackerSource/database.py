@@ -7,8 +7,6 @@ from typing import Dict
 from pathlib import Path
 
 
-#HOME_DIR = os.path.expanduser('~')
-#DOCUMENTS_DIR = Path(HOME_DIR) / 'Documents' / 'ProjectTrackerData' 
 DB_NAME = 'project_tracker.db'
 
 def database():
@@ -18,7 +16,7 @@ def database():
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS ValidationTracker (
             Product_ID TEXT PRIMARY KEY,
-            Request TEXT,
+            Referencet TEXT,
             Priority DATE,
             Homologated TEXT,
             Note TEXT,
@@ -38,12 +36,16 @@ def get_data_from_db(query):
     return df
 
 def update_data(df: pd.DataFrame):
-    """Updates the entire DB table with a DataFrame."""
-    conn = sqlite3.connect(DB_NAME)
-    cols_to_drop = ['Overall_Status', 'Details_Trigger']
-    df_save = df.drop(columns=[c for c in cols_to_drop if c in df.columns], errors='ignore')
-    # Use replace here to handle potential changes to ID (the primary key)
-    df_save.to_sql('ValidationTracker', conn, if_exists='replace', index=False) 
+    import sqlite3
+
+    table_name = "ValidationTracker" if is_checker else "OtherTable"
+    conn = sqlite3.connect("your_database.db")
+    cursor = conn.cursor()
+
+    # Replace existing table with new data
+    df.to_sql(table_name, conn, if_exists="replace", index=False)
+
+    conn.commit()
     conn.close()
 
 def fill_database_from_file(uploaded_file):

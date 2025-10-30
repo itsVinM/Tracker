@@ -10,6 +10,8 @@ import plotly.graph_objects as go
 import plotly.express as px
 
 from database import *
+from validation_check import *
+from report_form import *
 
 
 st.set_page_config(
@@ -104,29 +106,29 @@ class ValidationTracker:
 
 
     def save_changes(self, edited_data: pd.DataFrame):
-        # Reload full data
         full_data = self.load_data()
 
         if edited_data.empty:
             st.warning("No changes to save.")
             return
 
+        # Ensure 'Request' is treated as string for consistency
+        full_data['Request'] = full_data['Request'].astype(str)
+        edited_data['Request'] = edited_data['Request'].astype(str)
+
         # Detect removed rows
         existing_keys = set(full_data['Request'])
         edited_keys = set(edited_data['Request'])
         removed_keys = existing_keys - edited_keys
 
-        # Drop removed rows
         if removed_keys:
             full_data = full_data[~full_data['Request'].isin(removed_keys)]
 
-        # Update existing rows
-        full_data.update(edited_data)
+        # Remove rows that will be updated
+        full_data = full_data[~full_data['Request'].isin(edited_data['Request'])]
 
-        # Detect new rows
-        new_rows = edited_data[~edited_data['Request'].isin(existing_keys)]
-        if not new_rows.empty:
-            full_data = pd.concat([full_data, new_rows], ignore_index=True)
+        # Append updated and new rows
+        full_data = pd.concat([full_data, edited_data], ignore_index=True)
 
         # Save back to DB
         update_data(full_data)
@@ -148,7 +150,7 @@ class ValidationTracker:
             st.error(f"An error occurred during Excel creation: {e}")
             return
 
-        today = datetime.today().strftime("%d%m%Y %H%M")
+        today = datetime.today().strftime("%Y_%m_%d @ %H:%M")
         st.download_button(
             label="🗂️ Download Backup",
             data=backup.getvalue(),
@@ -160,10 +162,7 @@ class ValidationTracker:
 #--- DASHBOARD FUNCTIONS ---
 
 def display_project_tracker():
-    """
-    Runs the Validation Tracker dashboard based on the user's provided structure.
-    Uses the mock ValidationTracker class.
-    """
+
     tracker = ValidationTracker()
     df = tracker.data.copy()
    
@@ -253,7 +252,7 @@ def display_project_tracker():
                     if date_col in new_df.columns:
                         new_df[date_col] = pd.to_datetime(new_df[date_col], errors='coerce')
                 
-                update_data(new_df, is_checker=False) 
+                update_data(new_df) 
                 
                 st.success("Tracker database has been populated successfully.")
                 st.rerun() 
@@ -262,13 +261,29 @@ def display_project_tracker():
                 st.error(f"Error processing file for DB population: {e}")
                 st.warning("Ensure the uploaded file is a valid Excel (.xlsx) file.")
 
+def display_validation_checker():
+    validation_checker=ValidationChecker()
+    validation_checker.run()
 
-
+def display_project_report():
+    report_form=HomologationApp()
+    report_form.display_form()
 
 def run_app():
-    """Main application entry point using tabs."""
-    st.sidebar.title("App Navigation")
-    display_project_tracker()
+    tab1, tab2, tab3 = st.tabs([
+        "🚧 Validation Tracker",
+        "🔌 Validation Planner",
+        " Report"
+    ])
+    with tab1:
+        display_project_tracker()
+    with tab2:
+        display_validation_checker()
+    with tab3:
+        display_project_report()
+    
+
+
 
 
 if __name__ == "__main__":
