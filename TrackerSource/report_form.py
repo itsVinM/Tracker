@@ -15,34 +15,70 @@ from st_aggrid import AgGrid, GridOptionsBuilder
 # Predefined comparison fields per component type
 PRODUCT_COMPARISON_FIELDS = {
     "MOSFET": {
-        "materiales": ["Vds", "Id", "Rds(on)", "Qg", "Vgs(th)", "Tj(max)", "Pd(max)", "Compliance"],
-        "dimensionado": ["Package", "Pin Count", "Mounting Type", "Size"]
+        "materiales": [
+            "Vds (Drain-Source Voltage)", "Id (Continuous Drain Current)", "Rds(on) (On Resistance)",
+            "Qg (Total Gate Charge)", "Vgs(th) (Gate Threshold Voltage)", "Tj(max) (Max Junction Temp)",
+            "Pd(max) (Max Power Dissipation)", "Gate Drive Voltage", "Body Diode Recovery",
+            "Compliance", "Technology (Planar/Trench)", "Thermal Resistance (RθJC)"
+        ],
+        "dimensionado": [
+            "Package", "Pin Count", "Mounting Type", "Size", "Heatsink Compatibility", "PCB Footprint"
+        ]
     },
     "Diode": {
-        "materiales": ["Vr", "If", "Vf", "trr", "Tj(max)", "Pd(max)", "Compliance"],
-        "dimensionado": ["Package", "Pin Count", "Mounting Type", "Size"]
+        "materiales": [
+            "Vr (Reverse Voltage)", "If (Forward Current)", "Vf (Forward Voltage Drop)",
+            "trr (Reverse Recovery Time)", "Tj(max)", "Pd(max)", "Leakage Current",
+            "Compliance", "Recovery Type (Soft/Fast)", "Surge Current Rating"
+        ],
+        "dimensionado": [
+            "Package", "Pin Count", "Mounting Type", "Size", "Polarity Marking", "PCB Footprint"
+        ]
     },
     "Inductor": {
-        "materiales": ["Inductance", "Rated Current", "Saturation Current", "DCR", "Shielding", "Compliance"],
-        "dimensionado": ["Core Size", "Height", "Footprint", "Mounting Type"]
+        "materiales": [
+            "Inductance", "Rated Current", "Saturation Current", "DCR (DC Resistance)",
+            "Shielding", "Core Material", "Compliance", "Self-Resonant Frequency", "Q Factor"
+        ],
+        "dimensionado": [
+            "Core Size", "Height", "Footprint", "Mounting Type", "Winding Type", "Orientation"
+        ]
     },
     "Connector": {
-        "materiales": ["Current Rating", "Voltage Rating", "Contact Resistance", "Insulation Resistance", "Compliance"],
-        "dimensionado": ["Pitch", "Rows", "Contact Count", "Mounting Type"]
+        "materiales": [
+            "Current Rating", "Voltage Rating", "Contact Resistance", "Insulation Resistance",
+            "Compliance", "Mating Cycles", "Contact Material", "Plating", "Flammability Rating"
+        ],
+        "dimensionado": [
+            "Pitch", "Rows", "Contact Count", "Mounting Type", "Locking Mechanism", "Orientation"
+        ]
     },
     "DC-DC Converter": {
-        "materiales": ["Input Voltage Range", "Output Voltage", "Output Current", "Efficiency", "Isolation Voltage", "Compliance"],
-        "dimensionado": ["Module Size", "Height", "Pin Count", "Mounting Type"]
+        "materiales": [
+            "Input Voltage Range", "Output Voltage", "Output Current", "Efficiency",
+            "Isolation Voltage", "Compliance", "Switching Frequency", "Ripple Voltage",
+            "Load Regulation", "Line Regulation", "Protection Features"
+        ],
+        "dimensionado": [
+            "Module Size", "Height", "Pin Count", "Mounting Type", "Thermal Pad", "Connector Type"
+        ]
     },
     "Capacitor": {
-        "materiales": ["Capacitance", "Voltage Rating", "ESR", "Ripple Current", "Compliance"],
-        "dimensionado": ["Package", "Size", "Mounting Type"]
+        "materiales": [
+            "Capacitance", "Voltage Rating", "ESR (Equivalent Series Resistance)",
+            "Ripple Current", "Compliance", "Dielectric Type", "Temperature Coefficient",
+            "Leakage Current", "Lifetime at Rated Conditions"
+        ],
+        "dimensionado": [
+            "Package", "Size", "Mounting Type", "Lead Spacing", "Polarity Marking"
+        ]
     },
     "Custom": {
         "materiales": [],
         "dimensionado": []
     }
 }
+
 
 
 class HomologationApp:
@@ -117,7 +153,7 @@ class HomologationApp:
                 st.session_state["materiales_preview"] = None
             if "dimensionado_preview" not in st.session_state:
                 st.session_state["dimensionado_preview"] = None
-                
+
             # --- Comparison Tables ---
             with st.expander("Comparison Tables", expanded=True):
                 comp_names = [comp['name'] for comp in data['datasheet_links']]

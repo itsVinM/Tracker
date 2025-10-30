@@ -253,22 +253,24 @@ def display_project_tracker():
 
 def display_validation_checker():
     validation_checker=ValidationChecker()
-    with st.expander ("🔌 Validation Planner"):
-        validation_checker.run()
+    validation_checker.run()
 
 def display_project_report():
     report_form=HomologationApp()
-    with st.expander ("⏳ Report Builder"):
-        report_form.display_form()
+    report_form.display_form()
 
 def run_app():
-
-    st.subheader("🚧 Validation Tracker")  
-    display_project_tracker()
-    display_validation_checker()
-    display_project_report()
-    
-    
+    tab1, tab2, tab3 = st.tabs([
+        "🚧 Validation Tracker",
+        "🔌 Validation Planner",
+        " ⏳Report generation"
+    ])
+    with tab1:
+        display_project_tracker()
+    with tab2:
+        display_validation_checker()
+    with tab3:
+        display_project_report()
     
 
 
