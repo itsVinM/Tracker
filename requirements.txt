@@ -92,6 +92,7 @@ smmap==5.0.1
 SQLAlchemy==2.0.36
 streamlit==1.50.0
 streamlit-aggrid==1.1.9
+streamlit-calendar==1.4.0
 streamlit-desktop-app==0.3.4
 tenacity==9.0.0
 toml==0.10.2

@@ -10,6 +10,7 @@ import io, os, html
 from datetime import date
 from io import BytesIO
 from PIL import Image
+from st_aggrid import AgGrid, GridOptionsBuilder
 
 # Predefined comparison fields per component type
 PRODUCT_COMPARISON_FIELDS = {
@@ -43,167 +44,120 @@ PRODUCT_COMPARISON_FIELDS = {
     }
 }
 
+
 class HomologationApp:
     def __init__(self):
         if 'report_data' not in st.session_state:
             st.session_state.report_data = {}
-    
-    def add_hyperlink(self,paragraph, url, text):
-        """
-        Add a hyperlink to a paragraph.
-        """
-        # Create the relationship for the hyperlink
+
+    def add_hyperlink(self, paragraph, url, text):
         part = paragraph.part
         r_id = part.relate_to(url, 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink', is_external=True)
-
-        # Create the w:hyperlink tag and add attributes
         hyperlink = OxmlElement('w:hyperlink')
         hyperlink.set(qn('r:id'), r_id)
-
-        # Create a w:r element
         new_run = OxmlElement('w:r')
         rPr = OxmlElement('w:rPr')
-
-        # Style: blue and underlined
         color = OxmlElement('w:color')
         color.set(qn('w:val'), '0000FF')
         rPr.append(color)
-
         underline = OxmlElement('w:u')
         underline.set(qn('w:val'), 'single')
         rPr.append(underline)
-
         new_run.append(rPr)
-
-        # Add text
         text_elem = OxmlElement('w:t')
         text_elem.text = text
         new_run.append(text_elem)
-
         hyperlink.append(new_run)
         paragraph._p.append(hyperlink)
-        return hyperlink
 
+    def editable_table_aggrid(self, df, key):
+        gb = GridOptionsBuilder.from_dataframe(df)
+        gb.configure_default_column(editable=True)
+        grid_options = gb.build()
+        grid_response = AgGrid(df, gridOptions=grid_options, key=key, update_mode='MODEL_CHANGED')
+        return pd.DataFrame(grid_response['data'])
 
     def display_form(self):
         logo_path = "premium_psu_logo.png"
-        col1,col2=st.columns(2)
-        with col1:
-            data = st.session_state.report_data
+        data = st.session_state.report_data
 
-            # General Information
-            with st.expander("General Information", expanded=True):
-                cols = st.columns(3)
-                data['product_type'] = cols[0].selectbox("Component Type", list(PRODUCT_COMPARISON_FIELDS.keys()))
-                data['doc_id'] = cols[1].text_input("Document ID", "H-2025-133")
-                data['edition'] = cols[2].text_input("Edition", "2")
+        with st.expander("General Information", expanded=True):
+            cols = st.columns(3)
+            data['product_type'] = cols[0].selectbox("Component Type", list(PRODUCT_COMPARISON_FIELDS.keys()))
+            data['doc_id'] = cols[1].text_input("Document ID", "H-2025-133")
+            data['edition'] = cols[2].text_input("Edition", "2")
+            cols2 = st.columns(3)
+            data['codigos'] = cols2[0].text_input("Códigos", "26010206")
+            data['date'] = cols2[1].date_input("Date", value=date.today()).strftime("%d.%m.%Y")
+            data['author'] = cols2[2].text_input("Author", "V.Mocanu")
 
-                cols2 = st.columns(3)
-                data['codigos'] = cols2[0].text_input("Códigos", "26010206")
-                data['date'] = cols2[1].date_input("Date", value=date.today()).strftime("%d.%m.%Y")
-                data['author'] = cols2[2].text_input("Author", "V.Mocanu")
+        with st.expander("Objecto", expanded=True):
+            data['objeto'] = st.text_area("Objecto", "Se estudia la posibilidad de homologar el componente...")
 
-            # Objecto
-            with st.expander("Objecto", expanded=True):
-                data['objeto'] = st.text_area("Objecto", "Se estudia la posibilidad de homologar el componente...")
-            
-            with st.expander("Motivo", expanded=True):
-                data['motivo'] = st.text_area("Motivo", 
-                    "Solicitante: \n"
-                    "Motivo: ")
+        with st.expander("Motivo", expanded=True):
+            data['motivo'] = st.text_area("Motivo", "Solicitante:\nMotivo:")
 
-            with st.expander("Investigativo", expanded=True):
-                # Motivation text area
-                data['investigativo'] = st.text_area(
-                    "Investigativo",
-                    "El componente que se compraba hasta ahora es el \n"
-                    "Los diseños de los componentes se pueden consultar en la siguiente carpeta:\n"
-                    "G:\\Laboratori\\PLANOS - M. PRIMAS_Backup\\Data sheets")
+        with st.expander("Investigativo", expanded=True):
+            data['investigativo'] = st.text_area("Investigativo", "El componente que se compraba hasta ahora es...\nG:\\Laboratori\\PLANOS - M. PRIMAS_Backup\\Data sheets")
 
-                # Component list with name + link together
-                num_links = st.slider("Número de componentes a comparar", 1, 5, 2)
-                data['datasheet_links'] = []
+        num_links = st.slider("Número de componentes a comparar", 1, 5, 2)
+        data['datasheet_links'] = []
+        for i in range(num_links):
+            name = st.text_input(f"Nombre del componente {i+1}", key=f"name_{i}")
+            url = st.text_input(f"Enlace del componente {i+1}", key=f"url_{i}")
+            if not name.strip():
+                name = f"Component_{i+1}"
+            data['datasheet_links'].append({'name': name, 'url': url})
 
-                
-                st.markdown("### Componentes y enlaces")
-                for i in range(num_links):
-                    st.markdown(f"**Componente {i+1}**")
-                    component_name = st.text_input(f"Nombre del componente {i+1}", key=f"ds_name_{i}", placeholder="Ej: ZUGO D12P154FST0001T")
-                    component_link = st.text_input(f"Enlace del componente {i+1}", key=f"ds_url_{i}", placeholder="Ej: http://example.com/datasheet")
+        with st.expander("Comparison Tables", expanded=True):
+            comp_names = [comp['name'] for comp in data['datasheet_links']]
+            materiales_df = pd.DataFrame(columns=["Field"] + comp_names)
+            for field in PRODUCT_COMPARISON_FIELDS[data['product_type']]['materiales']:
+                row = {"Field": field}
+                for name in comp_names:
+                    row[name] = ""
+                materiales_df.loc[len(materiales_df)] = row
+            edited_materiales_df = self.editable_table_aggrid(materiales_df, key="materiales_editor")
+            data['materiales'] = edited_materiales_df.to_dict(orient="records")
 
-                    if not component_name.strip():
-                        component_name = f"Component_{i+1}"
+            dimensionado_df = pd.DataFrame(columns=["Field"] + comp_names)
+            for field in PRODUCT_COMPARISON_FIELDS[data['product_type']]['dimensionado']:
+                row = {"Field": field}
+                for name in comp_names:
+                    row[name] = ""
+                dimensionado_df.loc[len(dimensionado_df)] = row
+            edited_dimensionado_df = self.editable_table_aggrid(dimensionado_df, key="dimensionado_editor")
+            data['dimensionado'] = edited_dimensionado_df.to_dict(orient="records")
 
-                    data['datasheet_links'].append({'name': component_name, 'url': component_link})
+        with st.expander("Conclusion", expanded=True):
+            data['conclusion'] = st.text_area("Conclusión", "El componente propuesto tiene un diseño con mismas dimensiones de las opciones homologadas.")
 
-            # Comparison Tables
-            with st.expander("Comparison Tables", expanded=True):
-                # Electrical Properties
-                st.markdown("#### Electrical Properties")
-                comp_names = [comp['name'] if comp['name'].strip() else f"Component_{i+1}" for i, comp in enumerate(data['datasheet_links'])]
-                materiales_df = pd.DataFrame(columns=["Field"] + comp_names)
-                for field in PRODUCT_COMPARISON_FIELDS[data['product_type']]['materiales']:
-                    row = {"Field": field}
-                    for name in comp_names:
-                        row[name] = ""
-                    materiales_df.loc[len(materiales_df)] = row
-                st.data_editor(materiales_df, num_rows="dynamic", key="materiales_editor")
-                data['materiales'] = materiales_df.to_dict(orient="records")
-
-                # Physical Dimensions
-                st.markdown("#### Physical Dimensions")
-                dimensionado_df = pd.DataFrame(columns=["Field"] + comp_names)
-                for field in PRODUCT_COMPARISON_FIELDS[data['product_type']]['dimensionado']:
-                    row = {"Field": field}
-                    for name in comp_names:
-                        row[name] = ""
-                    dimensionado_df.loc[len(dimensionado_df)] = row
-                st.data_editor(dimensionado_df, num_rows="dynamic", key="dimensionado_editor")
-                data['dimensionado'] = dimensionado_df.to_dict(orient="records")
-
-            # Conclusion
-            with st.expander("Conclusion", expanded=True):
-                data['conclusion'] = st.text_area("Conclusión", "El componente propuesto tiene un diseño con mismas dimensiones de las opciones homologadas.")
-        with col2:
-            st.subheader("📄 Live Preview")
-            self.display_preview()
-            
-            if st.button("Generate DOCX Report"):
-                self.generate_doc(data, logo_path)
+        if st.button("Generate DOCX Report"):
+            self.generate_doc(data, logo_path)
 
     def generate_doc(self, data, logo_path):
-
         doc = Document()
         style = doc.styles['Normal']
         font = style.font
         font.name = 'Aptos Narrow'
         font.size = Pt(11)
 
-        # Header table
         table = doc.add_table(rows=1, cols=3)
         table.alignment = WD_ALIGN_PARAGRAPH.CENTER
-
-        # Left: Logo
         cell_logo = table.cell(0, 0)
-        
-        
-        image = Image.open("TrackerSource/premium_psu_logo.png")
+        image = Image.open(logo_path)
         buffer = BytesIO()
         image.save(buffer, format="PNG")
         buffer.seek(0)
-
         run = cell_logo.paragraphs[0].add_run()
         run.add_picture(buffer, width=Inches(1.2))
 
-
-        # Center
         cell_center = table.cell(0, 1)
         p_center = cell_center.paragraphs[0]
         p_center.alignment = WD_ALIGN_PARAGRAPH.CENTER
         run_center = p_center.add_run(f"{data['product_type']}\nSolicitud de homologación\nCódigos: {data['codigos']}")
         run_center.bold = True
 
-        # Right
         cell_right = table.cell(0, 2)
         info = (
             f"Doc ID: {data['doc_id']}\n"
@@ -213,37 +167,29 @@ class HomologationApp:
         )
         cell_right.text = info
 
-        # Sections
         doc.add_paragraph()
         doc.add_heading('1. Objetivo', level=1)
         doc.add_paragraph(data['objeto'])
 
         doc.add_heading('2. Motivo de la solicitud', level=1)
-        doc.add_paragraph(data.get('motivo', 'Texto explicativo aquí...'))
+        doc.add_paragraph(data.get('motivo', ''))
 
         doc.add_heading('3. Investigativo previo', level=1)
-        doc.add_paragraph(data.get('investigativo', 'Detalles previos...'))
+        doc.add_paragraph(data.get('investigativo', ''))
 
-        
-        datasheet_links = data.get('datasheet_links', [])
-        if datasheet_links:
-            doc.add_paragraph("Componentes:", style='Normal')
-            for comp in datasheet_links:
-                name = comp.get('name', 'Componente')
-                name_comp = "[" + data['codigos'] + "]" + name
-                url = comp.get('url', '')
-                p = doc.add_paragraph()
-                if url.strip():
-                    self.add_hyperlink(p, url, name_comp)  # ✅ Embedded link inside name
-                else:
-                    p.add_run(name_comp)
-
+        doc.add_paragraph("Componentes:", style='Normal')
+        for comp in data.get('datasheet_links', []):
+            name = comp.get('name', 'Componente')
+            url = comp.get('url', '')
+            p = doc.add_paragraph()
+            if url.strip():
+                self.add_hyperlink(p, url, f"[{data['codigos']}] {name}")
+            else:
+                p.add_run(f"[{data['codigos']}] {name}")
 
         doc.add_heading('4. Comparativa parámetros', level=1)
         doc.add_heading('Materiales y características mecánicas', level=2)
-
-        # Materiales table
-        materiales = data.get('materiales', [])
+        materiales = data.get("materiales", [])
         if materiales:
             keys = list(materiales[0].keys())
             table_mat = doc.add_table(rows=1, cols=len(keys))
@@ -258,7 +204,7 @@ class HomologationApp:
                     row[i].text = str(row_data.get(key, ''))
 
         doc.add_heading('Dimensiones', level=2)
-        dimensionado = data.get('dimensionado', [])
+        dimensionado = data.get("dimensionado", [])
         if dimensionado:
             keys = list(dimensionado[0].keys())
             table_dim = doc.add_table(rows=1, cols=len(keys))
@@ -273,9 +219,8 @@ class HomologationApp:
                     row[i].text = str(row_data.get(key, ''))
 
         doc.add_heading('6. Conclusiones', level=1)
-        doc.add_paragraph(data["conclusion"])
+        doc.add_paragraph(data.get("conclusion", ""))
 
-        # Save to buffer
         buffer = BytesIO()
         doc.save(buffer)
         buffer.seek(0)
@@ -283,139 +228,30 @@ class HomologationApp:
         st.download_button(
             label="Download DOCX",
             data=buffer,
-            file_name=f"Homologacion_{data['doc_id']}.docx",
+            file_name=f"Homologacion_{data.get('doc_id', 'sin_id')}.docx",
             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         )
 
-        
-        # Compile metadata JSON
-        metadata = {
-            "doc_id": data["doc_id"],
-            "project_name": data["project_name"],
-            "component": data["component"],
-            "date": data["date"],
-            "engineer": data["engineer"]
+        self.log_report(data)
+
+    def log_report(self, data):
+        log_path = "report_log.json"
+        log_entry = {
+            "doc_id": data.get("doc_id"),
+            "date": data.get("date"),
+            "author": data.get("author"),
+            "component": data.get("component", ""),
+            "product_type": data.get("product_type", ""),
+            "timestamp": str(date.today())
         }
 
-        st.json(metadata)
+        if os.path.exists(log_path):
+            with open(log_path, "r") as f:
+                logs = json.load(f)
+        else:
+            logs = []
 
+        logs.append(log_entry)
 
-    def display_preview(self, logo_path=None):
-        data = st.session_state.report_data
-
-        # CSS Styles
-        st.markdown(
-            "<style>"
-            ".doc-container { background-color: #fff; color: #0070C0; font-family: Arial, sans-serif; padding: 20px; max-width: 900px; margin: auto; border: 1px solid #ccc; }"
-            ".header-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }"
-            ".header-table td { vertical-align: top; padding: 10px; }"
-            ".header-left img { max-height: 60px; }"
-            ".header-center { text-align: center; }"
-            ".header-center h2 { margin: 5px 0; font-size: 24px; color: #0070C0; }"
-            ".header-center p { margin: 2px 0; font-size: 16px; }"
-            ".header-right table { border-collapse: collapse; font-size: 14px; }"
-            ".header-right td { padding: 4px 8px; }"
-            ".ok-cell { background-color: #92D050; color: #0070C0; font-weight: bold; }"
-            ".nok-cell { background-color: #FF0000; color: #fff; font-weight: bold; }"
-            ".section-title { font-size: 18px; font-weight: bold; color: #0070C0; margin-top: 20px; }"
-            ".sub-section-title { font-size: 16px; font-weight: bold; color: #0070C0; margin-top: 15px; }"
-            ".comparison-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }"
-            ".comparison-table th, .comparison-table td { border: 1px solid #000; padding: 6px; text-align: center; }"
-            "</style>",
-            unsafe_allow_html=True
-        )
-    
-
-        
-        image = Image.open("TrackerSource/premium_psu_logo.png")
-        st.image(image)
-
-        # Header HTML
-        header_html = (
-            '<table class="header-table">'
-            '<tr>'
-            '<td class="header-center">'
-            f'<h2>{data["product_type"]}</h2>'
-            '<p><strong>Solicitud de homologación</strong></p>'
-            f'<p>Códigos: {data["codigos"]}</p>'
-            '</td>'
-            '<td class="header-right">'
-            '<table>'
-            f'<tr><td>Doc ID:</td><td>{data["doc_id"]}</td></tr>'
-            f'<tr><td>Edition:</td><td>{data["edition"]}</td></tr>'
-            f'<tr><td>Date:</td><td>{data["date"]}</td></tr>'
-            f'<tr><td>Author:</td><td>{data["author"]}</td></tr>'
-            '</table>'
-            '</td>'
-            '</tr>'
-            '</table>'
-        )
-        st.markdown(header_html, unsafe_allow_html=True)
-
-        # Motivo section with proper spacing
-        st.markdown('<div class="section-title">1. Objecto</div>', unsafe_allow_html=True)
-        st.markdown(f"<div>{data['objeto'].replace('\n', '<br>')}</div>", unsafe_allow_html=True)
-
-        # Motivo section with proper spacing
-        st.markdown('<div class="section-title">2. Motivo de la solicitud</div>', unsafe_allow_html=True)
-        st.markdown(f"<div>{data['motivo'].replace('\n', '<br>')}</div>", unsafe_allow_html=True)
-
-        
-        component_list = data.get('componentes', [])
-
-        # Add component list if available
-        if component_list:
-            st.markdown("<strong>Componentes:</strong>", unsafe_allow_html=True)
-            st.markdown("<ul>" + "".join([f"<li>{c}</li>" for c in component_list]) + "</ul>", unsafe_allow_html=True)
-
-        # Display component list if available
-        if component_list:
-            st.markdown('<strong>Componentes:</strong>', unsafe_allow_html=True)
-            st.write(", ".join(component_list))  # Or use bullet points:
-            # st.markdown("<ul>" + "".join([f"<li>{c}</li>" for c in component_list]) + "</ul>", unsafe_allow_html=True)
-
-        st.markdown('<div class="section-title">3. Investigativo previo</div>', unsafe_allow_html=True)
-        formatted_investigativo = (data.get('investigativo', 'Detalles previos...')).replace('\n', '<br>')
-        st.markdown(f"<div>{formatted_investigativo}</div>", unsafe_allow_html=True)
-
-    
-        
-        
-        datasheet_links = data.get('datasheet_links', [])
-        components_html = ""
-        if datasheet_links:
-            components_html += "<br><strong>Componentes:</strong><ul>"
-            for comp in datasheet_links:
-                name = html.escape(comp.get('name', 'Componente'))  # ✅ Escape special chars
-                url = html.escape(comp.get('url', ''))  # ✅ Escape URL too
-                if url.strip():
-                    # ✅ Embed link inside the name
-                    components_html += f'<li><a href={url}> [{data['codigos']}] {name}</a></li>'
-                else:
-                    components_html += f'<li>{name}</li>'
-            components_html += "</ul>"
-
-        
-        # Combine investigativo text and components list
-        st.markdown(f"<div>{components_html}</div>", unsafe_allow_html=True)
-
-
-
-
-        st.markdown('<div class="section-title">4. Comparativa parámetros</div>', unsafe_allow_html=True)
-
-        # Subsection: Materiales y características mecánicas
-        st.markdown('<div class="sub-section-title">Materiales y características mecánicas</div>', unsafe_allow_html=True)
-        materiales_df = pd.DataFrame(data['materiales'])
-        st.markdown(materiales_df.to_html(classes='comparison-table', index=False), unsafe_allow_html=True)
-
-        # Subsection: Dimensiones
-        st.markdown('<div class="sub-section-title">Dimensiones</div>', unsafe_allow_html=True)
-        dimensionado_df = pd.DataFrame(data['dimensionado'])
-        st.markdown(dimensionado_df.to_html(classes='comparison-table', index=False), unsafe_allow_html=True)
-
-        # Conclusion
-        st.markdown('<div class="section-title">6. Conclusiones</div>', unsafe_allow_html=True)
-        st.write(data["conclusion"])
-
-            
+        with open(log_path, "w") as f:
+            json.dump(logs, f, indent=2)
