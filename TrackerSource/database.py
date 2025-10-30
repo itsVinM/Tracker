@@ -39,7 +39,7 @@ def update_data(df: pd.DataFrame):
     import sqlite3
 
     table_name = "ValidationTracker" 
-    conn = sqlite3.connect(DC_NAME)
+    conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
 
     # Replace existing table with new data

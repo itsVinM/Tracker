@@ -111,65 +111,80 @@ class HomologationApp:
                 if not name.strip():
                     name = f"Component_{i+1}"
                 data['datasheet_links'].append({'name': name, 'url': url})
-
+            
+            # Initialize session state to store saved tables
+            if "materiales_preview" not in st.session_state:
+                st.session_state["materiales_preview"] = None
+            if "dimensionado_preview" not in st.session_state:
+                st.session_state["dimensionado_preview"] = None
+                
+            # --- Comparison Tables ---
             with st.expander("Comparison Tables", expanded=True):
                 comp_names = [comp['name'] for comp in data['datasheet_links']]
+
+                # --- Materiales Table ---
+                materiales_fields = PRODUCT_COMPARISON_FIELDS[data['product_type']]['materiales']
                 materiales_df = pd.DataFrame(columns=["Field"] + comp_names)
-                for field in PRODUCT_COMPARISON_FIELDS[data['product_type']]['materiales']:
+                for field in materiales_fields:
                     row = {"Field": field}
-                    for name in comp_names:
-                        row[name] = ""
+                    row.update({name: "" for name in comp_names})
                     materiales_df.loc[len(materiales_df)] = row
-                edited_materiales_df = self.editable_table_aggrid(materiales_df, key="materiales_editor")
-                data['materiales'] = edited_materiales_df.to_dict(orient="records")
 
+                st.markdown("### ✏️ Materiales Editor")
+                edited_materiales_df = st.data_editor(materiales_df, num_rows="dynamic", use_container_width=True, key="materiales_editor")
+
+                # --- Dimensionado Table ---
+                dimensionado_fields = PRODUCT_COMPARISON_FIELDS[data['product_type']]['dimensionado']
                 dimensionado_df = pd.DataFrame(columns=["Field"] + comp_names)
-                for field in PRODUCT_COMPARISON_FIELDS[data['product_type']]['dimensionado']:
+                for field in dimensionado_fields:
                     row = {"Field": field}
-                    for name in comp_names:
-                        row[name] = ""
+                    row.update({name: "" for name in comp_names})
                     dimensionado_df.loc[len(dimensionado_df)] = row
-                edited_dimensionado_df = self.editable_table_aggrid(dimensionado_df, key="dimensionado_editor")
-                data['dimensionado'] = edited_dimensionado_df.to_dict(orient="records")
 
-            with st.expander("Conclusion", expanded=True):
-                data['conclusion'] = st.text_area("Conclusión", "El componente propuesto tiene un diseño con mismas dimensiones de las opciones homologadas.")
+                st.markdown("### ✏️ Dimensionado Editor")
+                edited_dimensionado_df = st.data_editor(dimensionado_df, num_rows="dynamic", use_container_width=True, key="dimensionado_editor")
 
-        with col2:
-            st.subheader("📄 Live Preview")
+                # Clean and update data dict for report
+                clean_materiales_df = edited_materiales_df.dropna(how="all").reset_index(drop=True)
+                clean_dimensionado_df = edited_dimensionado_df.dropna(how="all").reset_index(drop=True)
+                data['materiales'] = clean_materiales_df.to_dict(orient="records")
+                data['dimensionado'] = clean_dimensionado_df.to_dict(orient="records")
 
-            view1, view2, view3 = st.columns(3)
-            with view1:              
-                st.markdown(f"### {data['product_type']}")
-                st.markdown(f"**Solicitud de homologación**")
-                st.markdown(f"**Códigos:** {data['codigos']}")
-            with view3:
-                st.markdown(f"**Doc ID:** {data['doc_id']} | **Edition:** {data['edition']} | **Date:** {data['date']} | **Author:** {data['author']}")
-            
-            st.markdown("#### 1. Objecto")
-            st.markdown(data['objeto'].replace("\n", "<br>"), unsafe_allow_html=True)
-            st.markdown("#### 2. Motivo de la solicitud")
-            st.markdown(data['motivo'].replace("\n", "<br>"), unsafe_allow_html=True)
-            st.markdown("#### 3. Investigativo previo")
-            st.markdown(data['investigativo'].replace("\n", "<br>"), unsafe_allow_html=True)
-            
-            
-            # Remove index and empty rows
-            clean_materiales_df = materiales_df.dropna(how="all").reset_index(drop=True)
-            clean_dimensionado_df = dimensionado_df.dropna(how="all").reset_index(drop=True)
+                # --- Conclusion ---
+                with st.expander("Conclusion", expanded=True):
+                    data['conclusion'] = st.text_area("Conclusión", "El componente propuesto tiene un diseño con mismas dimensiones de las opciones homologadas.")
 
-            # Display without index
-            st.markdown("**Materiales y características mecánicas**")
-            st.table(clean_materiales_df)
+            # --- Live Preview ---
+            with col2:
+                st.subheader("📄 Live Preview")
 
-            st.markdown("**Dimensiones**")
-            st.table(clean_dimensionado_df)
+                view1, view2, view3 = st.columns(3)
+                with view1:
+                    st.markdown(f"### {data['product_type']}")
+                    st.markdown(f"**Solicitud de homologación**")
+                    st.markdown(f"**Códigos:** {data['codigos']}")
+                with view3:
+                    st.markdown(f"**Doc ID:** {data['doc_id']} | **Edition:** {data['edition']} | **Date:** {data['date']} | **Author:** {data['author']}")
 
-            st.markdown("#### 6. Conclusiones")
-            st.markdown(data['conclusion'])
+                st.markdown("#### 1. Objecto")
+                st.markdown(data['objeto'].replace("\n", "<br>"), unsafe_allow_html=True)
+                st.markdown("#### 2. Motivo de la solicitud")
+                st.markdown(data['motivo'].replace("\n", "<br>"), unsafe_allow_html=True)
+                st.markdown("#### 3. Investigativo previo")
+                st.markdown(data['investigativo'].replace("\n", "<br>"), unsafe_allow_html=True)
 
-        if st.button("Generate DOCX Report"):
-            self.generate_doc(data, logo_path)
+                st.markdown("**Materiales y características mecánicas**")
+                st.table(clean_materiales_df)
+
+                st.markdown("**Dimensiones**")
+                st.table(clean_dimensionado_df)
+
+                st.markdown("#### 6. Conclusiones")
+                st.markdown(data['conclusion'])
+
+            # --- Generate DOCX ---
+            if st.button("Generate DOCX Report"):
+                self.generate_doc(data, logo_path)
 
     def generate_doc(self, data, logo_path):
         doc = Document()

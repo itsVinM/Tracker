@@ -57,7 +57,19 @@ class ValidationTracker:
 
         return data
 
+    def display_editor(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Displays the full database in a single data editor without column toggles."""
 
+        # Show all columns from the DataFrame
+        edited_df = st.data_editor(
+            df,
+            column_config={col: self.column_config.get(col, {}) for col in df.columns},
+            hide_index=True,
+            num_rows="dynamic",
+            key="editor_main",
+        )
+
+        return edited_df
 
 
     def get_column_config(self) -> Dict[str, st.column_config.Column]:
@@ -78,31 +90,7 @@ class ValidationTracker:
             "Product_ID": st.column_config.Column(disabled=True, width="off"),
         }
 
-    def display_editor(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Displays a single data editor with optional visibility of detail columns."""
 
-        # Define column groups
-        base_cols = ["Request", "Priority", "Homologated", "Product"]
-        detail_cols = ["Note", "Current", "Position", "New", "Reference"]
-
-        # Filter only existing columns
-        base_cols = [col for col in base_cols if col in df.columns]
-        detail_cols = [col for col in detail_cols if col in df.columns]
-
-        # Toggle to show/hide detail columns
-        show_details = st.checkbox("Show detailed columns", value=False)
-
-        # Combine columns based on toggle
-        visible_cols = base_cols + detail_cols if show_details else base_cols
-        edited_df = st.data_editor(
-            df[visible_cols],
-            column_config={col: self.column_config[col] for col in visible_cols},
-            hide_index=True,
-            num_rows="dynamic",
-            key="editor_main",
-        )
-
-        return edited_df
 
     def save_changes(self, edited_data: pd.DataFrame):
         full_data = self.load_data()
@@ -265,24 +253,22 @@ def display_project_tracker():
 
 def display_validation_checker():
     validation_checker=ValidationChecker()
-    validation_checker.run()
+    with st.expander ("🔌 Validation Planner"):
+        validation_checker.run()
 
 def display_project_report():
     report_form=HomologationApp()
-    report_form.display_form()
+    with st.expander ("⏳ Report Builder"):
+        report_form.display_form()
 
 def run_app():
-    tab1, tab2, tab3 = st.tabs([
-        "🚧 Validation Tracker",
-        "🔌 Validation Planner",
-        " Report"
-    ])
-    with tab1:
-        display_project_tracker()
-    with tab2:
-        display_validation_checker()
-    with tab3:
-        display_project_report()
+
+    st.subheader("🚧 Validation Tracker")  
+    display_project_tracker()
+    display_validation_checker()
+    display_project_report()
+    
+    
     
 
 
