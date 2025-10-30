@@ -14,4 +14,4 @@ export DB_PATH="$(pwd)/TrackerSource/project_tracker.db"
 xdg-open http://localhost:8501 &
 
 # Run Streamlit app
-streamlit run TrackerSource/tracker.py --server.port 8501
+streamlit run TrackerSource/TRACKER.py --server.port 8501
