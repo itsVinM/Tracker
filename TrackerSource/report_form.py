@@ -101,16 +101,18 @@ class HomologationApp:
                 num_links = st.slider("Número de componentes a comparar", 1, 5, 2)
                 data['datasheet_links'] = []
 
+                
                 st.markdown("### Componentes y enlaces")
                 for i in range(num_links):
                     st.markdown(f"**Componente {i+1}**")
                     component_name = st.text_input(f"Nombre del componente {i+1}", key=f"ds_name_{i}", placeholder="Ej: ZUGO D12P154FST0001T")
                     component_link = st.text_input(f"Enlace del componente {i+1}", key=f"ds_url_{i}", placeholder="Ej: http://example.com/datasheet")
-                    
+
                     if not component_name.strip():
                         component_name = f"Component_{i+1}"
-                    
+
                     data['datasheet_links'].append({'name': component_name, 'url': component_link})
+
             # Comparison Tables
             with st.expander("Comparison Tables", expanded=True):
                 # Electrical Properties
@@ -293,12 +295,14 @@ class HomologationApp:
         st.markdown(header_html, unsafe_allow_html=True)
 
         # Motivo section with proper spacing
+        st.markdown('<div class="section-title">1. Objecto</div>', unsafe_allow_html=True)
+        st.markdown(f"<div>{data['objeto'].replace('\n', '<br>')}</div>", unsafe_allow_html=True)
+
+        # Motivo section with proper spacing
         st.markdown('<div class="section-title">2. Motivo de la solicitud</div>', unsafe_allow_html=True)
         st.markdown(f"<div>{data['motivo'].replace('\n', '<br>')}</div>", unsafe_allow_html=True)
 
-        # Replace newlines with <br> for HTML rendering
-        formatted_investigativo = (data.get('investigativo', 'Detalles previos...')).replace('\n', '<br>')
-        st.markdown(f"<div>{formatted_investigativo}</div>", unsafe_allow_html=True)
+        
         component_list = data.get('componentes', [])
 
         # Add component list if available
@@ -313,7 +317,31 @@ class HomologationApp:
             # st.markdown("<ul>" + "".join([f"<li>{c}</li>" for c in component_list]) + "</ul>", unsafe_allow_html=True)
 
         st.markdown('<div class="section-title">3. Investigativo previo</div>', unsafe_allow_html=True)
-        st.write(data.get('investigativo', 'Detalles previos...'))
+        formatted_investigativo = (data.get('investigativo', 'Detalles previos...')).replace('\n', '<br>')
+        st.markdown(f"<div>{formatted_investigativo}</div>", unsafe_allow_html=True)
+
+    
+        
+        datasheet_links = data.get('datasheet_links', [])
+        components_html = ""
+        if datasheet_links:
+            components_html += "<br><strong>Componentes:</strong><ul>"
+            for comp in datasheet_links:
+                name = comp.get('name', 'Componente')
+                url = comp.get('url', '')
+                if url.strip():
+                    # ✅ Embed link in the name
+                    components_html += f'<li><{url}{name}</a></li>'
+                else:
+                    components_html += f'<li>{name}</li>'
+            components_html += "</ul>"
+
+        
+        # Combine investigativo text and components list
+        st.markdown(f"<div>{components_html}</div>", unsafe_allow_html=True)
+
+
+
 
         st.markdown('<div class="section-title">4. Comparativa parámetros</div>', unsafe_allow_html=True)
 
