@@ -230,12 +230,13 @@ class HomologationApp:
             doc.add_paragraph("Componentes:", style='Normal')
             for comp in datasheet_links:
                 name = comp.get('name', 'Componente')
+                name_comp = "[" + data['codigos'] + "]" + name
                 url = comp.get('url', '')
                 p = doc.add_paragraph()
                 if url.strip():
-                    self.add_hyperlink(p, url, name)  # ✅ Embedded link inside name
+                    self.add_hyperlink(p, url, name_comp)  # ✅ Embedded link inside name
                 else:
-                    p.add_run(name)
+                    p.add_run(name_comp)
 
 
         doc.add_heading('4. Comparativa parámetros', level=1)
@@ -282,9 +283,22 @@ class HomologationApp:
         st.download_button(
             label="Download DOCX",
             data=buffer,
-            file_name="Homologation_Report.docx",
+            file_name=f"Homologacion_{data['doc_id']}.docx",
             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         )
+
+        
+        # Compile metadata JSON
+        metadata = {
+            "doc_id": data["doc_id"],
+            "project_name": data["project_name"],
+            "component": data["component"],
+            "date": data["date"],
+            "engineer": data["engineer"]
+        }
+
+        st.json(metadata)
+
 
     def display_preview(self, logo_path=None):
         data = st.session_state.report_data
@@ -376,7 +390,7 @@ class HomologationApp:
                 url = html.escape(comp.get('url', ''))  # ✅ Escape URL too
                 if url.strip():
                     # ✅ Embed link inside the name
-                    components_html += f'<li><a href={url}>{name}</a></li>'
+                    components_html += f'<li><a href={url}> [{data['codigos']}] {name}</a></li>'
                 else:
                     components_html += f'<li>{name}</li>'
             components_html += "</ul>"
